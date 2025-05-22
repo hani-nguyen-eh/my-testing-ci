@@ -1,4 +1,4 @@
-module.exports = ({ workflows }) => {
+export const splitWorkflows = ({ workflows }) => {
   if (!workflows) {
     return [];
   }
