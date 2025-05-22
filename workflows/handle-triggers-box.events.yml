@@ -1,0 +1,18 @@
+name: Handle triggers box events (call shared workflow)
+
+on:
+  issue_comment:
+    types: [edited]
+
+jobs:
+  call-handle-events-workflow:
+    name: Call handle events workflow
+    uses: ./.github/workflows/shared-handle-triggers-box-events.yml
+    if: github.event.issue.pull_request != null && github.event.comment.user.login == 'devops-eh'
+    with:
+      event-payload: ${{ toJSON(github.event) }}
+      required-workflows: "build-dev"
+      optional-workflows: "build-preview,build-e2e-assets--hr-web-app"
+
+    secrets:
+      GH_DISPATCH_TOKEN: ${{ secrets.GH_DISPATCH_TOKEN }}

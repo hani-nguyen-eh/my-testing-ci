@@ -1,0 +1,25 @@
+name: Setup triggers box comment
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches:
+      - master
+      - urgent-deployment
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  create-triggers-box-comment:
+    name: Create triggers box comment
+    uses: ./.github/workflows/shared-setup-triggers-box-comment.yml
+    with:
+      pr-number: ${{ github.event.pull_request.number }}
+      commit-hash: ${{ github.event.pull_request.head.sha }}
+      head-ref: ${{ github.head_ref }}
+      required-workflows: "build-dev"
+      optional-workflows: "build-preview,build-e2e-assets--hr-web-app"
+    secrets:
+      GH_DISPATCH_TOKEN: ${{ secrets.GH_DISPATCH_TOKEN }}
