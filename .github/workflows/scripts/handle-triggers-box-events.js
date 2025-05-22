@@ -1,6 +1,6 @@
-import { splitWorkflows } from "./shared/handle-split-workflow.js";
+const { splitWorkflows } = require("./shared/handle-split-workflow.js");
 
-export default async ({ github, context, core, eventPayload }) => {
+module.exports = async ({ github, context, core, eventPayload }) => {
   const {
     repo: { owner, repo },
   } = context;
