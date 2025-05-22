@@ -1,6 +1,6 @@
 import { splitWorkflows } from "./shared/handle-split-workflow.js";
 
-module.exports = async ({ github, context, core, eventPayload }) => {
+export default async ({ github, context, core, eventPayload }) => {
   const {
     repo: { owner, repo },
   } = context;
