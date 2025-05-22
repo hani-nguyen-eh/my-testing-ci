@@ -1,9 +1,11 @@
+import { splitWorkflows } from "./shared/handle-split-workflow.js";
+
 module.exports = async ({ github, context, core, eventPayload }) => {
   const {
     repo: { owner, repo },
   } = context;
   // Read BOT name from env var, fallback to default
-  const actionBot = process.env.ACTION_BOT || 'devops-eh';
+  const actionBot = process.env.ACTION_BOT || "devops-eh";
   const requiredWorkflowsArray = splitWorkflows({
     workflows: process.env.REQUIRED_WORKFLOWS,
   });
@@ -18,7 +20,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
     !eventPayload.issue.pull_request
   ) {
     console.log(
-      'Event payload is missing required issue or pull_request information. Skipping.'
+      "Event payload is missing required issue or pull_request information. Skipping."
     );
     return;
   }
@@ -40,7 +42,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
   }
 
   const prUrl = eventPayload.issue.pull_request.url;
-  const prNumber = parseInt(prUrl.split('/').pop(), 10);
+  const prNumber = parseInt(prUrl.split("/").pop(), 10);
   const commentBody = eventPayload.comment.body;
   const previousBody = eventPayload.changes.body.from;
 
@@ -58,7 +60,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
   // --- Get Branch Name ---
   let branchName;
   try {
-    console.log('Fetching PR details to get branch name...');
+    console.log("Fetching PR details to get branch name...");
     const { data: prDetails } = await github.rest.pulls.get({
       owner,
       repo,
@@ -81,14 +83,14 @@ module.exports = async ({ github, context, core, eventPayload }) => {
   } else {
     // This might be okay if only dispatching non-approval workflows
     console.warn(
-      'Could not extract commit hash from comment body. Workflow approvals will be skipped.'
+      "Could not extract commit hash from comment body. Workflow approvals will be skipped."
     );
   }
 
   // --- Get Environment IDs ---
-  console.log('Fetching environment IDs...');
-  let developmentEnvId = ''; // Default to empty string like Bash would if not found
-  let previewEnvId = ''; // Default to empty string
+  console.log("Fetching environment IDs...");
+  let developmentEnvId = ""; // Default to empty string like Bash would if not found
+  let previewEnvId = ""; // Default to empty string
 
   try {
     const { data: environmentsResponse } =
@@ -102,24 +104,24 @@ module.exports = async ({ github, context, core, eventPayload }) => {
       Array.isArray(environmentsResponse.environments)
     ) {
       const developmentEnvironment = environmentsResponse.environments.find(
-        env => env.name === 'Development'
+        (env) => env.name === "Development"
       );
       if (developmentEnvironment) {
         developmentEnvId = developmentEnvironment.id.toString(); // Ensure it's a string
       }
 
       const previewEnvironment = environmentsResponse.environments.find(
-        env => env.name === 'Preview'
+        (env) => env.name === "Preview"
       );
       if (previewEnvironment) {
         previewEnvId = previewEnvironment.id.toString(); // Ensure it's a string
       }
     } else {
-      core.warning('No environments found or unexpected response structure.');
+      core.warning("No environments found or unexpected response structure.");
     }
 
-    console.log(`Development Env ID: ${developmentEnvId || 'Not Found'}`);
-    console.log(`Preview Env ID: ${previewEnvId || 'Not Found'}`);
+    console.log(`Development Env ID: ${developmentEnvId || "Not Found"}`);
+    console.log(`Preview Env ID: ${previewEnvId || "Not Found"}`);
   } catch (error) {
     // Log as warning, similar to how Bash script might proceed with empty IDs
     core.warning(
@@ -129,10 +131,10 @@ module.exports = async ({ github, context, core, eventPayload }) => {
   }
 
   // Set outputs for other steps in the GitHub Action
-  core.setOutput('development_id', developmentEnvId);
-  core.setOutput('preview_id', previewEnvId);
+  core.setOutput("development_id", developmentEnvId);
+  core.setOutput("preview_id", previewEnvId);
 
-  console.log('Successfully set environment IDs as outputs.');
+  console.log("Successfully set environment IDs as outputs.");
 
   // --- Analyze Checkbox Toggles ---
 
@@ -162,12 +164,12 @@ module.exports = async ({ github, context, core, eventPayload }) => {
 
   async function processWorkflowTrigger(workflows) {
     for (const workflow of workflows) {
-      if (wasToggledOn(workflow, 'GA Workflow Trigger')) {
+      if (wasToggledOn(workflow, "GA Workflow Trigger")) {
         try {
           console.log(
             `Dispatching workflow: ${workflow}.yml for branch ${branchName}`
           );
-          await workflows.map(workflow => {
+          await workflows.map((workflow) => {
             return github.rest.actions.createWorkflowDispatch({
               owner,
               repo,
@@ -187,14 +189,18 @@ module.exports = async ({ github, context, core, eventPayload }) => {
 
   async function processWorkflowApprovals(workflows) {
     for (const workflow of workflows) {
-      if (wasToggledOn(workflow, 'GA Workflow Approval')) {
+      if (wasToggledOn(workflow, "GA Workflow Approval")) {
         const workflowInfo = gaWorkflowApprovalCheckboxes[checkbox];
         const targetEnvId = workflowInfo.envId;
 
         // Check if we successfully fetched the required environment ID earlier
         if (!targetEnvId) {
           core.warning(
-            `Cannot process approval for '${workflowInfo.name}' because its required environment ID (${checkbox === 'build-dev' ? 'Development' : 'Preview'}) was not found or fetched.`
+            `Cannot process approval for '${
+              workflowInfo.name
+            }' because its required environment ID (${
+              checkbox === "build-dev" ? "Development" : "Preview"
+            }) was not found or fetched.`
           );
           continue; // Skip this approval
         }
@@ -214,7 +220,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
               owner,
               repo,
               head_sha: commitHash,
-              status: 'waiting', // Important: Only find runs actually waiting
+              status: "waiting", // Important: Only find runs actually waiting
               per_page: 50, // Adjust page size if needed
             }
           );
@@ -223,7 +229,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
           for await (const { data: runs } of runsIterator) {
             // Filter for the specific workflow name IN THIS BATCH
             const matchingRunInBatch = runs.find(
-              run => run.name === workflowInfo.name
+              (run) => run.name === workflowInfo.name
             );
             if (matchingRunInBatch) {
               // Check if this run is waiting for the specific environment
@@ -234,7 +240,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
                   run_id: matchingRunInBatch.id,
                 });
               const needsApprovalForEnv = pendingDeployments.some(
-                dep =>
+                (dep) =>
                   dep.environment?.id === targetEnvId &&
                   dep.waiting_for_reviewers
               );
@@ -263,7 +269,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
               repo,
               run_id: targetRun.id,
               environment_ids: [targetEnvId], // The specific environment we want to approve
-              state: 'approved',
+              state: "approved",
               comment: `Approved via checkbox toggle in PR #${prNumber}.`,
             });
             console.log(
@@ -292,12 +298,12 @@ module.exports = async ({ github, context, core, eventPayload }) => {
   // --- Process Workflow Approvals ---
   if (!commitHash) {
     console.warn(
-      'Skipping workflow approvals processing as commit hash was not found in the comment.'
+      "Skipping workflow approvals processing as commit hash was not found in the comment."
     );
   } else {
     await processWorkflowApprovals(requiredWorkflowsArray);
     await processWorkflowApprovals(optionalWorkflowsArray);
   }
 
-  console.log('Checkbox analysis script complete.');
+  console.log("Checkbox analysis script complete.");
 };

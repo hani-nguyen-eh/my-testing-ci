@@ -1,10 +1,10 @@
-const { splitWorkflows } = require('./shared/handle-split-workflow');
+import { splitWorkflows } from "./shared/handle-split-workflow.js";
 
 module.exports = async ({ github, context, core }) => {
   const prNumber = parseInt(process.env.PR_NUMBER, 10);
   const commitHash = process.env.COMMIT_HASH;
   const headRef = process.env.HEAD_REF;
-  const actionBot = process.env.ACTION_BOT || 'devops-eh'; // Default if not set
+  const actionBot = process.env.ACTION_BOT || "devops-eh";
   const requiredWorkflowsArray = splitWorkflows({
     workflows: process.env.REQUIRED_WORKFLOWS,
   });
@@ -19,7 +19,7 @@ module.exports = async ({ github, context, core }) => {
     !requiredWorkflowsArray?.length
   ) {
     core.setFailed(
-      'Missing or invalid required input: PR_NUMBER, COMMIT_HASH, HEAD_REF or REQUIRED_WORKFLOWS'
+      "Missing or invalid required input: PR_NUMBER, COMMIT_HASH, HEAD_REF or REQUIRED_WORKFLOWS"
     );
     return;
   }
@@ -50,7 +50,7 @@ module.exports = async ({ github, context, core }) => {
 
     for await (const { data: comments } of commentsIterator) {
       const foundComment = comments.find(
-        comment =>
+        (comment) =>
           comment.user.login === actionBot &&
           comment.body.includes(commentIdentifier)
       );
@@ -66,7 +66,7 @@ module.exports = async ({ github, context, core }) => {
   }
 
   // 2. Formulate the comment body
-  console.log('Formulating the GitHub comment...');
+  console.log("Formulating the GitHub comment...");
   const encodedBranchName = encodeURIComponent(headRef);
 
   function generateWorkflowMarkdown(workflowName) {
@@ -76,39 +76,39 @@ module.exports = async ({ github, context, core }) => {
 
   function generateWorkflowMarkdownArray(workflowArr) {
     return workflowArr
-      .map(workflow => `- ${generateWorkflowMarkdown(workflow)}`)
-      .join('\n');
+      .map((workflow) => `- ${generateWorkflowMarkdown(workflow)}`)
+      .join("\n");
   }
 
   // Use Intl for more robust timezone formatting
   const now = new Date();
   const options = {
     // Define options once
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
     hour12: false,
-    timeZone: '', // Placeholder
+    timeZone: "", // Placeholder
   };
 
   let dateHCM, timeHCM, dateSYD, timeSYD;
   try {
-    options.timeZone = 'Asia/Ho_Chi_Minh';
-    const formatterHCM = new Intl.DateTimeFormat('en-VN', options);
-    [dateHCM, timeHCM] = formatterHCM.format(now).split(', ');
+    options.timeZone = "Asia/Ho_Chi_Minh";
+    const formatterHCM = new Intl.DateTimeFormat("en-VN", options);
+    [dateHCM, timeHCM] = formatterHCM.format(now).split(", ");
 
-    options.timeZone = 'Australia/Sydney';
-    const formatterSYD = new Intl.DateTimeFormat('en-AU', options);
-    [dateSYD, timeSYD] = formatterSYD.format(now).split(', ');
+    options.timeZone = "Australia/Sydney";
+    const formatterSYD = new Intl.DateTimeFormat("en-AU", options);
+    [dateSYD, timeSYD] = formatterSYD.format(now).split(", ");
   } catch (error) {
     core.warning(`Failed to format dates: ${error.message}`);
     // Provide fallback dates if formatting fails
     const fallbackDate = now.toISOString();
-    [dateHCM, timeHCM] = [fallbackDate.split('T')[0], '(HCM Error)'];
-    [dateSYD, timeSYD] = [fallbackDate.split('T')[0], '(SYD Error)'];
+    [dateHCM, timeHCM] = [fallbackDate.split("T")[0], "(HCM Error)"];
+    [dateSYD, timeSYD] = [fallbackDate.split("T")[0], "(SYD Error)"];
   }
 
   const messageBody = `# Workflow triggers ${commentIdentifier}\n
@@ -134,16 +134,16 @@ _This comment is generated against commit ${commitHash}, updated at:_
         comment_id: existingCommentId,
         body: messageBody,
       });
-      console.log('Comment updated.');
+      console.log("Comment updated.");
     } else {
-      console.log('Creating new comment...');
+      console.log("Creating new comment...");
       await github.rest.issues.createComment({
         owner,
         repo,
         issue_number: prNumber,
         body: messageBody,
       });
-      console.log('Comment created.');
+      console.log("Comment created.");
     }
   } catch (error) {
     core.setFailed(`Failed to create/update comment: ${error.message}`);
