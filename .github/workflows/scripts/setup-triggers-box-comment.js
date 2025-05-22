@@ -1,6 +1,6 @@
-import { splitWorkflows } from "./shared/handle-split-workflow.js";
+const { splitWorkflows } = require("./shared/handle-split-workflow.js");
 
-export default async ({ github, context, core }) => {
+module.exports = async ({ github, context, core }) => {
   const prNumber = parseInt(process.env.PR_NUMBER, 10);
   const commitHash = process.env.COMMIT_HASH;
   const headRef = process.env.HEAD_REF;
