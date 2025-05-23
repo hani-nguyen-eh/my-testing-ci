@@ -1,0 +1,11 @@
+name: Build Dev
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Hello, world! Build Dev"
