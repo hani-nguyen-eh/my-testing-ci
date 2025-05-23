@@ -123,11 +123,9 @@ module.exports = async ({ github, context, core, eventPayload }) => {
     console.log(`Development Env ID: ${developmentEnvId || "Not Found"}`);
     console.log(`Preview Env ID: ${previewEnvId || "Not Found"}`);
   } catch (error) {
-    // Log as warning, similar to how Bash script might proceed with empty IDs
     core.warning(
       `Could not fetch environments: ${error.message}. IDs will be empty.`
     );
-    // developmentEnvId and previewEnvId will remain empty strings
   }
 
   // Set outputs for other steps in the GitHub Action
@@ -160,31 +158,6 @@ module.exports = async ({ github, context, core, eventPayload }) => {
       return true;
     }
     return false;
-  }
-
-  async function processWorkflowTrigger(workflows) {
-    for (const workflow of workflows) {
-      if (wasToggledOn(workflow, "GA Workflow Trigger")) {
-        try {
-          console.log(
-            `Dispatching workflow: ${workflow}.yml for branch ${branchName}`
-          );
-          await workflows.map((workflow) => {
-            return github.rest.actions.createWorkflowDispatch({
-              owner,
-              repo,
-              workflow_id: `${workflow}.yml`,
-              ref: branchName,
-            });
-          });
-          console.log(`Successfully dispatched ${workflow}.yml`);
-        } catch (error) {
-          core.error(
-            `Failed to dispatch workflow ${workflow}.yml: ${error.message}`
-          );
-        }
-      }
-    }
   }
 
   async function processWorkflowApprovals(workflows) {
@@ -290,10 +263,6 @@ module.exports = async ({ github, context, core, eventPayload }) => {
       }
     }
   }
-
-  // --- Process Workflow Triggers ---
-  await processWorkflowTrigger(requiredWorkflowsArray);
-  await processWorkflowTrigger(optionalWorkflowsArray);
 
   // --- Process Workflow Approvals ---
   if (!commitHash) {
