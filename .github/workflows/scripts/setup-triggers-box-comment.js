@@ -4,7 +4,7 @@ module.exports = async ({ github, context, core }) => {
   const prNumber = parseInt(process.env.PR_NUMBER, 10);
   const commitHash = process.env.COMMIT_HASH;
   const headRef = process.env.HEAD_REF;
-  const actionBot = process.env.ACTION_BOT || "devops-eh";
+  const actionBot = process.env.ACTION_BOT || "hani-nguyen-eh";
   const requiredWorkflowsArray = splitWorkflows({
     workflows: process.env.REQUIRED_WORKFLOWS,
   });

@@ -32,7 +32,7 @@ jobs:
     timeout-minutes: 5
     runs-on: ubuntu-latest
     env:
-      ACTION_BOT: "devops-eh"
+      ACTION_BOT: "hani-nguyen-eh"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -45,7 +45,7 @@ jobs:
           HEAD_REF: ${{ inputs.head-ref }}
           REQUIRED_WORKFLOWS: ${{ inputs.required-workflows }}
           OPTIONAL_WORKFLOWS: ${{ inputs.optional-workflows }}
-          ACTION_BOT: "devops-eh"
+          ACTION_BOT: "hani-nguyen-eh"
         with:
           github-token: ${{ secrets.GH_DISPATCH_TOKEN }}
           script: |
