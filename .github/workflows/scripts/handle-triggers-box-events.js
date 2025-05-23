@@ -94,11 +94,10 @@ module.exports = async ({ github, context, core, eventPayload }) => {
 
   try {
     const { data: environmentsResponse } =
-      await github.rest.repos.listEnvironments({
+      await github.rest.repos.getAllEnvironments({
         owner,
         repo,
       });
-
     if (
       environmentsResponse &&
       Array.isArray(environmentsResponse.environments)
