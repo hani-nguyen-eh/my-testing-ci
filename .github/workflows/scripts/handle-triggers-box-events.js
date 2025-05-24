@@ -5,13 +5,22 @@ module.exports = async ({ github, context, core, eventPayload }) => {
     repo: { owner, repo },
   } = context;
   // Read BOT name from env var, fallback to default
-  const actionBot = process.env.ACTION_BOT || "hani-nguyen-eh";
+  const actionBot = process.env.ACTION_BOT || "devops-eh";
   const requiredWorkflowsArray = splitWorkflows({
     workflows: process.env.REQUIRED_WORKFLOWS,
   });
   const optionalWorkflowsArray = splitWorkflows({
     workflows: process.env.OPTIONAL_WORKFLOWS,
   });
+
+  // Parse environment mappings from input
+  let environmentMappings;
+  try {
+    environmentMappings = JSON.parse(process.env.ENVIRONMENT_MAPPINGS || "{}");
+  } catch (error) {
+    core.setFailed(`Failed to parse environment mappings: ${error.message}`);
+    return;
+  }
 
   // --- Basic Event Validation ---
   if (
@@ -89,8 +98,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
 
   // --- Get Environment IDs ---
   console.log("Fetching environment IDs...");
-  let developmentEnvId = ""; // Default to empty string like Bash would if not found
-  let previewEnvId = ""; // Default to empty string
+  const environmentIds = {}; // Store environment IDs by name
 
   try {
     const { data: environmentsResponse } =
@@ -98,38 +106,47 @@ module.exports = async ({ github, context, core, eventPayload }) => {
         owner,
         repo,
       });
+
     if (
       environmentsResponse &&
       Array.isArray(environmentsResponse.environments)
     ) {
-      const developmentEnvironment = environmentsResponse.environments.find(
-        (env) => env.name === "Development"
-      );
-      if (developmentEnvironment) {
-        developmentEnvId = developmentEnvironment.id.toString(); // Ensure it's a string
-      }
+      // Create a map of environment names to IDs
+      environmentsResponse.environments.forEach((env) => {
+        environmentIds[env.name] = env.id.toString();
+      });
 
-      const previewEnvironment = environmentsResponse.environments.find(
-        (env) => env.name === "Preview"
+      console.log(
+        "Found environments:",
+        Object.keys(environmentIds).join(", ")
       );
-      if (previewEnvironment) {
-        previewEnvId = previewEnvironment.id.toString(); // Ensure it's a string
-      }
     } else {
       core.warning("No environments found or unexpected response structure.");
     }
-
-    console.log(`Development Env ID: ${developmentEnvId || "Not Found"}`);
-    console.log(`Preview Env ID: ${previewEnvId || "Not Found"}`);
   } catch (error) {
     core.warning(
       `Could not fetch environments: ${error.message}. IDs will be empty.`
     );
   }
 
+  // Helper to get environment ID for a workflow
+  function getEnvironmentIdForWorkflow(workflowName) {
+    const envName = environmentMappings[workflowName];
+    if (!envName) {
+      console.log(`No environment mapping found for workflow: ${workflowName}`);
+      return null;
+    }
+    const envId = environmentIds[envName];
+    if (!envId) {
+      console.log(`Environment ID not found for name: ${envName}`);
+      return null;
+    }
+    return envId;
+  }
+
   // Set outputs for other steps in the GitHub Action
-  core.setOutput("development_id", developmentEnvId);
-  core.setOutput("preview_id", previewEnvId);
+  core.setOutput("development_id", getEnvironmentIdForWorkflow("Development"));
+  core.setOutput("preview_id", getEnvironmentIdForWorkflow("Preview"));
 
   console.log("Successfully set environment IDs as outputs.");
 
@@ -162,29 +179,22 @@ module.exports = async ({ github, context, core, eventPayload }) => {
   async function processWorkflowApprovals(workflows) {
     for (const workflow of workflows) {
       if (wasToggledOn(workflow, "GA Workflow Approval")) {
-        const workflowInfo = gaWorkflowApprovalCheckboxes[checkbox];
-        const targetEnvId = workflowInfo.envId;
-
-        // Check if we successfully fetched the required environment ID earlier
+        const targetEnvId = getEnvironmentIdForWorkflow(workflow);
         if (!targetEnvId) {
           core.warning(
-            `Cannot process approval for '${
-              workflowInfo.name
-            }' because its required environment ID (${
-              checkbox === "build-dev" ? "Development" : "Preview"
-            }) was not found or fetched.`
+            `Cannot process approval for '${workflow}' because its environment mapping was not found or environment ID was not fetched.`
           );
-          continue; // Skip this approval
+          continue;
         }
 
         try {
           console.log(
-            `Processing approval request for workflow '${workflowInfo.name}' (Environment ID: ${targetEnvId}) for commit ${commitHash}`
+            `Processing approval request for workflow '${workflow}' (Environment ID: ${targetEnvId}) for commit ${commitHash}`
           );
 
           // 1. Find the relevant 'waiting' workflow run
           console.log(
-            `Fetching 'waiting' workflow runs named '${workflowInfo.name}' with SHA ${commitHash}...`
+            `Fetching 'waiting' workflow runs named '${workflow}' with SHA ${commitHash}...`
           );
           const runsIterator = github.paginate.iterator(
             github.rest.actions.listWorkflowRunsForRepo,
@@ -201,7 +211,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
           for await (const { data: runs } of runsIterator) {
             // Filter for the specific workflow name IN THIS BATCH
             const matchingRunInBatch = runs.find(
-              (run) => run.name === workflowInfo.name
+              (run) => run.name === workflow
             );
             if (matchingRunInBatch) {
               // Check if this run is waiting for the specific environment
@@ -250,13 +260,13 @@ module.exports = async ({ github, context, core, eventPayload }) => {
           } else {
             // This is common if the run finished, was rejected, or the comment edit happened before the run reached 'waiting' state
             console.warn(
-              `No 'waiting' workflow run found for '${workflowInfo.name}' with SHA ${commitHash} that requires approval for environment ID ${targetEnvId}. Cannot approve.`
+              `No 'waiting' workflow run found for '${workflow}' with SHA ${commitHash} that requires approval for environment ID ${targetEnvId}. Cannot approve.`
             );
           }
         } catch (error) {
           // Log error but don't fail the whole script
           core.error(
-            `Failed to process approval for workflow '${workflowInfo.name}': ${error.message}`
+            `Failed to process approval for workflow '${workflow}': ${error.message}`
           );
         }
       }
