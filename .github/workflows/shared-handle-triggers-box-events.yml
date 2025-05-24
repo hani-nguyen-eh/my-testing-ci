@@ -26,7 +26,7 @@ jobs:
     timeout-minutes: 5
     runs-on: ubuntu-latest
     env:
-      ACTION_BOT: "devops-eh"
+      ACTION_BOT: "hani-nguyen-eh"
       REQUIRED_WORKFLOWS: ${{ inputs.required-workflows }}
       OPTIONAL_WORKFLOWS: ${{ inputs.optional-workflows }}
       ENVIRONMENT_MAPPINGS: ${{ inputs.environment-mappings }}
