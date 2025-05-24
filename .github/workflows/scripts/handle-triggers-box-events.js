@@ -85,7 +85,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
   }
 
   // --- Extract Commit Hash ---
-  const commitHashMatch = commentBody.match(/commit ([a-f0-9])/);
+  const commitHashMatch = commentBody.match(/commit ([a-f0-9]{40})/);
   const commitHash = commitHashMatch ? commitHashMatch[1] : null;
   if (commitHash) {
     console.log(`Commit hash extracted: ${commitHash}`);
