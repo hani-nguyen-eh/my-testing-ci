@@ -5,7 +5,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
     repo: { owner, repo },
   } = context;
   // Read BOT name from env var, fallback to default
-  const actionBot = process.env.ACTION_BOT || "devops-eh";
+  const actionBot = process.env.ACTION_BOT || "hani-nguyen-eh";
   const requiredWorkflowsArray = splitWorkflows({
     workflows: process.env.REQUIRED_WORKFLOWS,
   });
