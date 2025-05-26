@@ -175,7 +175,11 @@ module.exports = async ({ github, context, core, eventPayload }) => {
   async function processWorkflowApprovals(workflows) {
     for (const workflow of workflows) {
       if (wasToggledOn(workflow, "GA Workflow Approval")) {
-        const targetEnvId = getEnvironmentIdForWorkflow(workflow);
+        const targetEnvId = getEnvIdForWorkflow({
+          workflow,
+          environmentMappings,
+          environmentIds,
+        });
         if (!targetEnvId) {
           core.warning(
             `Cannot process approval for '${workflow}' because its environment mapping was not found or environment ID was not fetched.`
