@@ -153,17 +153,17 @@ module.exports = async ({ github, context, core, eventPayload }) => {
     // Need double backslashes in the string for RegExp constructor
     // Matches: [ ] `workflow-name` on GitHub Actions at this [workflow](...)
     const uncheckedRegex = new RegExp(
-      `\\[\\s*\\]\\s*\`\\${checkboxName}\`\\s*on\\s*GitHub\\s*Actions\\s*at\\s*this\\s*\\[workflow\\]`
+      `\\[\\s*\\]\\s*\`\${checkbox}\`\\s*on\\s*GitHub\\s*Actions\\s*at\\s*this\\s*\\[workflow\\](?:\\s*\\([^)]*\\))?`
     );
     // Matches: [x] `workflow-name` on GitHub Actions at this [workflow](...) (case-insensitive X)
     const checkedRegex = new RegExp(
-      `\\[\\s*[Xx]\\s*\\]\\s*\`\\${checkboxName}\`\\s*on\\s*GitHub\\s*Actions\\s*at\\s*this\\s*\\[workflow\\]`
+      `\\[\\s*[xX]\\s*\\]\\s*\`\${checkbox}\`\\s*on\\s*GitHub\\s*Actions\\s*at\\s*this\\s*\\[workflow\\](?:\\s*\\([^)]*\\))?`
     );
 
     const previouslyUnchecked = uncheckedRegex.test(previousBody);
     const nowChecked = checkedRegex.test(commentBody);
     console.log(
-      `Previously unchecked: ${previouslyUnchecked}, Now checked: ${nowChecked}`
+      `Previously unchecked: ${previouslyUnchecked}, Now checked: ${nowChecked}, checkboxName: ${checkboxName}, workflowType: ${workflowType}`
     );
 
     if (previouslyUnchecked && nowChecked) {
