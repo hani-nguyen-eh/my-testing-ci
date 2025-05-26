@@ -1,4 +1,5 @@
 const { splitWorkflows } = require("./shared/handle-split-workflow.js");
+const { getEnvIdForWorkflow } = require("./helpers/getEnvIdForWorkflow.js");
 
 module.exports = async ({ github, context, core, eventPayload }) => {
   const {
@@ -129,24 +130,19 @@ module.exports = async ({ github, context, core, eventPayload }) => {
     );
   }
 
-  // Helper to get environment ID for a workflow
-  function getEnvironmentIdForWorkflow(workflowName) {
-    const envName = environmentMappings[workflowName];
-    if (!envName) {
-      console.log(`No environment mapping found for workflow: ${workflowName}`);
-      return null;
-    }
-    const envId = environmentIds[envName];
-    if (!envId) {
-      console.log(`Environment ID not found for name: ${envName}`);
-      return null;
-    }
-    return envId;
-  }
-
   // Set outputs for other steps in the GitHub Action
-  core.setOutput("development_id", getEnvironmentIdForWorkflow("Development"));
-  core.setOutput("preview_id", getEnvironmentIdForWorkflow("Preview"));
+  // Set environment IDs based on the workflow mappings
+  const allWorkflows = [...requiredWorkflowsArray, ...optionalWorkflowsArray];
+  allWorkflows.forEach((workflow) => {
+    const envId = getEnvIdForWorkflow({
+      workflow,
+      environmentMappings,
+      environmentIds,
+    });
+    if (envId) {
+      core.setOutput(`${workflow}_env_id`, envId);
+    }
+  });
 
   console.log("Successfully set environment IDs as outputs.");
 
