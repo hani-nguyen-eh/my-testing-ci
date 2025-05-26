@@ -162,6 +162,9 @@ module.exports = async ({ github, context, core, eventPayload }) => {
 
     const previouslyUnchecked = uncheckedRegex.test(previousBody);
     const nowChecked = checkedRegex.test(commentBody);
+    console.log(
+      `Previously unchecked: ${previouslyUnchecked}, Now checked: ${nowChecked}`
+    );
 
     if (previouslyUnchecked && nowChecked) {
       console.log(
@@ -173,6 +176,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
   }
 
   async function processWorkflowApprovals(workflows) {
+    console.log("Processing workflow approvals...");
     for (const workflow of workflows) {
       if (wasToggledOn(workflow, "GA Workflow Approval")) {
         const targetEnvId = getEnvIdForWorkflow({
