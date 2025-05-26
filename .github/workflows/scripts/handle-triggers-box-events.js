@@ -1,5 +1,6 @@
 const { splitWorkflows } = require("./shared/handle-split-workflow.js");
 const { getEnvIdForWorkflow } = require("./helpers/getEnvIdForWorkflow.js");
+const { createWorkflowRegex } = require("./helpers/createWorkflowRegex.js");
 
 module.exports = async ({ github, context, core, eventPayload }) => {
   const {
@@ -152,13 +153,16 @@ module.exports = async ({ github, context, core, eventPayload }) => {
   function wasToggledOn(checkboxName, workflowType) {
     // Need double backslashes in the string for RegExp constructor
     // Matches: [ ] `workflow-name` on GitHub Actions at this [workflow](...)
-    const uncheckedRegex = new RegExp(
-      `\\[\\s*\\]\\s*\`\${checkbox}\`\\s*on\\s*GitHub\\s*Actions\\s*at\\s*this\\s*\\[workflow\\](?:\\s*\\([^)]*\\))?`
-    );
-    // Matches: [x] `workflow-name` on GitHub Actions at this [workflow](...) (case-insensitive X)
-    const checkedRegex = new RegExp(
-      `\\[\\s*[xX]\\s*\\]\\s*\`\${checkbox}\`\\s*on\\s*GitHub\\s*Actions\\s*at\\s*this\\s*\\[workflow\\](?:\\s*\\([^)]*\\))?`
-    );
+    // const uncheckedRegex = new RegExp(
+    //   `\\[\\s*\\]\\s*\`\${checkbox}\`\\s*on\\s*GitHub\\s*Actions\\s*at\\s*this\\s*\\[workflow\\](?:\\s*\\([^)]*\\))?`
+    // );
+    // // Matches: [x] `workflow-name` on GitHub Actions at this [workflow](...) (case-insensitive X)
+    // const checkedRegex = new RegExp(
+    //   `\\[\\s*[xX]\\s*\\]\\s*\`\${checkbox}\`\\s*on\\s*GitHub\\s*Actions\\s*at\\s*this\\s*\\[workflow\\](?:\\s*\\([^)]*\\))?`
+    // );
+
+    const uncheckedRegex = createWorkflowRegex(checkboxName, false);
+    const checkedRegex = createWorkflowRegex(checkboxName, true);
 
     const previouslyUnchecked = uncheckedRegex.test(previousBody);
     const nowChecked = checkedRegex.test(commentBody);
