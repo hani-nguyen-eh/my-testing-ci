@@ -163,7 +163,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
     const previouslyUnchecked = uncheckedRegex.test(previousBody);
     const nowChecked = checkedRegex.test(commentBody);
     console.log(
-      `Previously unchecked: ${previouslyUnchecked}, Now checked: ${nowChecked}, checkboxName: ${checkboxName}, workflowType: ${workflowType}`
+      `Previously unchecked: ${previouslyUnchecked}, Now checked: ${nowChecked}, checkboxName: ${checkboxName}, workflowType: ${workflowType}, previousBody: ${previousBody}, commentBody: ${commentBody}`
     );
 
     if (previouslyUnchecked && nowChecked) {
