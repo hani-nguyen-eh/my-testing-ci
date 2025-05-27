@@ -1,4 +1,4 @@
-const { splitWorkflows } = require("./shared/handle-split-workflow.js");
+const { splitWorkflows } = require("./helpers/helpers.js");
 
 module.exports = async ({ github, context, core }) => {
   const prNumber = parseInt(process.env.PR_NUMBER, 10);

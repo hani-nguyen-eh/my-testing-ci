@@ -1,8 +1,7 @@
 name: Build Preview
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+  workflow_dispatch: # Only allow manual triggering via API/checkbox
 
 jobs:
   build:
