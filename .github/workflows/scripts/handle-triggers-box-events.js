@@ -228,10 +228,10 @@ module.exports = async ({ github, context, core, eventPayload }) => {
               per_page: 50,
             }
           );
-          console.log("runsIterator", runsIterator);
 
           let targetRun = null;
           for await (const { data: runs } of runsIterator) {
+            console.log("runs", runs);
             // Filter for the specific workflow name IN THIS BATCH
             const matchingRunInBatch = runs.find(
               (run) => run.name === workflow
