@@ -15,14 +15,11 @@ module.exports = {
     const envId = environmentIds[envName];
     return envId;
   },
-  escapeRegExp: (string) => {
-    if (typeof string !== "string") {
-      return "";
-    }
-    return string.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
-  },
   createWorkflowRegex: (checkboxName, isChecked) => {
-    const escapedCheckboxName = this.escapeRegExp(checkboxName);
+    const escapedCheckboxName = checkboxName.replace(
+      /[\\^$.*+?()[\]{}|]/g,
+      "\\$&"
+    );
     let checkboxMarkerPattern;
 
     if (isChecked) {
