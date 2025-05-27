@@ -1,8 +1,6 @@
 name: Build E2E Assets -- HR Web App
 
 on:
-  pull_request:
-    types: [opened, synchronize]
   workflow_dispatch:
 jobs:
   build:

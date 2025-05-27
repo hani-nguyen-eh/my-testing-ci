@@ -1,6 +1,8 @@
-const { splitWorkflows } = require("./shared/handle-split-workflow.js");
-const { getEnvIdForWorkflow } = require("./helpers/getEnvIdForWorkflow.js");
-const { createWorkflowRegex } = require("./helpers/createWorkflowRegex.js");
+const {
+  splitWorkflows,
+  getEnvIdForWorkflow,
+  createWorkflowRegex,
+} = require("./helpers/helpers.js");
 
 module.exports = async ({ github, context, core, eventPayload }) => {
   const {
@@ -222,8 +224,8 @@ module.exports = async ({ github, context, core, eventPayload }) => {
               owner,
               repo,
               head_sha: commitHash,
-              status: "waiting", // Important: Only find runs actually waiting
-              per_page: 50, // Adjust page size if needed
+              status: "waiting",
+              per_page: 50,
             }
           );
 
