@@ -151,24 +151,11 @@ module.exports = async ({ github, context, core, eventPayload }) => {
 
   // Helper to check if a specific checkbox was toggled from unchecked to checked
   function wasToggledOn(checkboxName, workflowType) {
-    // Need double backslashes in the string for RegExp constructor
-    // Matches: [ ] `workflow-name` on GitHub Actions at this [workflow](...)
-    // const uncheckedRegex = new RegExp(
-    //   `\\[\\s*\\]\\s*\`\${checkbox}\`\\s*on\\s*GitHub\\s*Actions\\s*at\\s*this\\s*\\[workflow\\](?:\\s*\\([^)]*\\))?`
-    // );
-    // // Matches: [x] `workflow-name` on GitHub Actions at this [workflow](...) (case-insensitive X)
-    // const checkedRegex = new RegExp(
-    //   `\\[\\s*[xX]\\s*\\]\\s*\`\${checkbox}\`\\s*on\\s*GitHub\\s*Actions\\s*at\\s*this\\s*\\[workflow\\](?:\\s*\\([^)]*\\))?`
-    // );
-
     const uncheckedRegex = createWorkflowRegex(checkboxName, false);
     const checkedRegex = createWorkflowRegex(checkboxName, true);
 
     const previouslyUnchecked = uncheckedRegex.test(previousBody);
     const nowChecked = checkedRegex.test(commentBody);
-    console.log(
-      `Previously unchecked: ${previouslyUnchecked}, Now checked: ${nowChecked}, checkboxName: ${checkboxName}, workflowType: ${workflowType}, previousBody: ${previousBody}, commentBody: ${commentBody}`
-    );
 
     if (previouslyUnchecked && nowChecked) {
       console.log(
@@ -177,6 +164,30 @@ module.exports = async ({ github, context, core, eventPayload }) => {
       return true;
     }
     return false;
+  }
+
+  async function processWorkflowTrigger(workflows) {
+    for (const workflow of workflows) {
+      if (wasToggledOn(workflow, "GA Workflow Trigger")) {
+        try {
+          console.log(
+            `Dispatching workflow: ${workflow}.yml for branch ${branchName}`
+          );
+          // Dispatch the workflow regardless of environment mapping
+          await github.rest.actions.createWorkflowDispatch({
+            owner,
+            repo,
+            workflow_id: `${workflow}.yml`,
+            ref: branchName,
+          });
+          console.log(`Successfully dispatched ${workflow}.yml`);
+        } catch (error) {
+          core.error(
+            `Failed to dispatch workflow ${workflow}.yml: ${error.message}`
+          );
+        }
+      }
+    }
   }
 
   async function processWorkflowApprovals(workflows) {
@@ -188,11 +199,12 @@ module.exports = async ({ github, context, core, eventPayload }) => {
           environmentMappings,
           environmentIds,
         });
+
+        // Only process approvals if environment mapping exists
         if (!targetEnvId) {
-          core.warning(
-            `Cannot process approval for '${workflow}' because its environment mapping was not found or environment ID was not fetched.`
+          console.log(
+            `Skipping approval for '${workflow}' - no environment mapping found. This workflow may not require environment approval.`
           );
-          continue;
         }
 
         try {
