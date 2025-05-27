@@ -22,7 +22,7 @@ module.exports = {
     return string.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
   },
   createWorkflowRegex: (checkboxName, isChecked) => {
-    const escapedCheckboxName = escapeRegExp(checkboxName);
+    const escapedCheckboxName = this.escapeRegExp(checkboxName);
     let checkboxMarkerPattern;
 
     if (isChecked) {
