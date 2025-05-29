@@ -224,7 +224,6 @@ module.exports = async ({ github, context, core, eventPayload }) => {
               owner,
               repo,
               head_sha: commitHash,
-              status: "waiting",
               per_page: 50,
             }
           );
