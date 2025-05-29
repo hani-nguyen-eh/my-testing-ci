@@ -169,30 +169,30 @@ module.exports = async ({ github, context, core, eventPayload }) => {
   }
 
   async function processWorkflowApprovals(workflows) {
-    console.log("Processing workflows with environment protection...");
+    console.log("Processing workflow approvals...");
     for (const workflow of workflows) {
-      if (wasToggledOn(workflow, "GA Workflow Trigger")) {
+      if (wasToggledOn(workflow, "GA Workflow Approval")) {
         const targetEnvId = getEnvIdForWorkflow({
           workflow,
           environmentMappings,
           environmentIds,
         });
 
+        // Only process approvals if environment mapping exists
         if (!targetEnvId) {
           console.log(
-            `Skipping '${workflow}' - no environment mapping found. This workflow should be handled by trigger process.`
+            `Skipping approval for '${workflow}' - no environment mapping found. This workflow may not require environment approval.`
           );
-          continue;
         }
 
         try {
           console.log(
-            `Processing workflow '${workflow}' with environment protection (Environment ID: ${targetEnvId}) for commit ${commitHash}`
+            `Processing approval request for workflow '${workflow}' (Environment ID: ${targetEnvId}) for commit ${commitHash}`
           );
 
-          // 1. Check if there's already a waiting workflow run
+          // 1. Find the relevant 'waiting' workflow run
           console.log(
-            `Checking for existing 'waiting' workflow runs named '${workflow}' with SHA ${commitHash}...`
+            `Fetching 'waiting' workflow runs named '${workflow}' with SHA ${commitHash}...`
           );
           const runsIterator = github.paginate.iterator(
             github.rest.actions.listWorkflowRunsForRepo,
@@ -206,10 +206,11 @@ module.exports = async ({ github, context, core, eventPayload }) => {
 
           let targetRun = null;
           for await (const { data: runs } of runsIterator) {
+            // Filter for the specific workflow name IN THIS BATCH
             const matchingRunInBatch = runs.find(
               (run) => run.name === workflow
             );
-            console.log("matchingRunInBatch", matchingRunInBatch);
+            console.log("matchingRunInBatch", matchingRunInBatch, workflow);
             if (matchingRunInBatch) {
               // Check if this run is waiting for the specific environment
               const { data: pendingDeployments } =
@@ -225,29 +226,29 @@ module.exports = async ({ github, context, core, eventPayload }) => {
               );
 
               if (needsApprovalForEnv) {
-                targetRun = matchingRunInBatch;
+                targetRun = matchingRunInBatch; // Found the run we need to approve
                 console.log(
                   `Found target run ID: ${targetRun.id} waiting for environment ${targetEnvId}.`
                 );
-                break;
+                break; // Stop searching pages
               } else {
                 console.log(
                   `Run ID ${matchingRunInBatch.id} found, but not waiting for environment ${targetEnvId}. Checking next runs/pages.`
                 );
               }
             }
-          }
+          } // End run iteration
 
-          // 2. If waiting run found, approve it. Otherwise, trigger new workflow.
+          // 2. Approve if found
           if (targetRun) {
             console.log(
-              `Approving existing deployment for run ID ${targetRun.id} / environment ID ${targetEnvId}.`
+              `Attempting to approve deployment for run ID ${targetRun.id} / environment ID ${targetEnvId}.`
             );
             await github.rest.actions.reviewPendingDeploymentsForRun({
               owner,
               repo,
               run_id: targetRun.id,
-              environment_ids: [targetEnvId],
+              environment_ids: [targetEnvId], // The specific environment we want to approve
               state: "approved",
               comment: `Approved via checkbox toggle in PR #${prNumber}.`,
             });
@@ -255,9 +256,9 @@ module.exports = async ({ github, context, core, eventPayload }) => {
               `Successfully approved deployment for run ID ${targetRun.id} and environment ID ${targetEnvId}`
             );
           } else {
-            // No waiting run found, trigger the workflow
-            console.log(
-              `No waiting run found. Triggering workflow: ${workflow}.yml for branch ${branchName}`
+            // This is common if the run finished, was rejected, or the comment edit happened before the run reached 'waiting' state
+            console.warn(
+              `No 'waiting' workflow run found for '${workflow}' with SHA ${commitHash} that requires approval for environment ID ${targetEnvId}. Cannot approve.`
             );
             await github.rest.actions.createWorkflowDispatch({
               owner,
@@ -265,11 +266,11 @@ module.exports = async ({ github, context, core, eventPayload }) => {
               workflow_id: `${workflow}.yml`,
               ref: branchName,
             });
-            console.log(`Successfully dispatched ${workflow}.yml`);
           }
         } catch (error) {
+          // Log error but don't fail the whole script
           core.error(
-            `Failed to process workflow '${workflow}': ${error.message}`
+            `Failed to process approval for workflow '${workflow}': ${error.message}`
           );
         }
       }
