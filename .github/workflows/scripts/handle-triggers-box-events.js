@@ -133,22 +133,6 @@ module.exports = async ({ github, context, core, eventPayload }) => {
     );
   }
 
-  // Set outputs for other steps in the GitHub Action
-  // Set environment IDs based on the workflow mappings
-  const allWorkflows = [...requiredWorkflowsArray, ...optionalWorkflowsArray];
-  allWorkflows.forEach((workflow) => {
-    const envId = getEnvIdForWorkflow({
-      workflow,
-      environmentMappings,
-      environmentIds,
-    });
-    if (envId) {
-      core.setOutput(`${workflow}_env_id`, envId);
-    }
-  });
-
-  console.log("Successfully set environment IDs as outputs.");
-
   // --- Analyze Checkbox Toggles ---
 
   // Helper to check if a specific checkbox was toggled from unchecked to checked
