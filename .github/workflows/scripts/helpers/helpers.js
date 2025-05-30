@@ -12,7 +12,18 @@ module.exports = {
       console.log(`No environment mapping found for workflow: ${workflow}`);
       return null;
     }
+
     const envId = environmentIds[envName];
+    if (!envId) {
+      console.log(
+        `Environment ID not found for environment name: ${envName} (workflow: ${workflow})`
+      );
+      return null;
+    }
+
+    console.log(
+      `Found environment mapping: ${workflow} -> ${envName} (ID: ${envId})`
+    );
     return envId;
   },
   createWorkflowRegex: (checkboxName, isChecked) => {
