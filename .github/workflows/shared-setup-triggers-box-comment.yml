@@ -19,7 +19,7 @@ on:
         required: false
         type: string
     secrets:
-      GH_DISPATCH_TOKEN:
+      GH_TOKEN:
         required: true
 
 concurrency:
@@ -47,7 +47,7 @@ jobs:
           OPTIONAL_WORKFLOWS: ${{ inputs.optional-workflows }}
           ACTION_BOT: "hani-nguyen-eh"
         with:
-          github-token: ${{ secrets.GH_DISPATCH_TOKEN }}
+          github-token: ${{ secrets.GH_TOKEN }}
           script: |
             // Use correct relative path from workspace root
             const script = require('.github/workflows/scripts/setup-triggers-box-comment.js');
