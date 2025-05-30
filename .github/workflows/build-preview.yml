@@ -5,6 +5,7 @@ on:
 
 jobs:
   build:
+    environment: Preview
     runs-on: ubuntu-latest
     steps:
       - run: echo "Hello, world! Build Preview"
