@@ -22,4 +22,4 @@ jobs:
       required-workflows: "build-dev"
       optional-workflows: "build-preview,build-e2e-assets--hr-web-app"
     secrets:
-      GH_DISPATCH_TOKEN: "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"
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
