@@ -1,11 +1,15 @@
 name: Build Preview
 
 on:
+  pull_request:
+    types: [opened, synchronize]
+
   workflow_dispatch:
 
 jobs:
   build:
     environment: Preview
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
     steps:
       - run: echo "Hello, world! Build Preview"
