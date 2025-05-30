@@ -22,4 +22,4 @@ jobs:
       required-workflows: "build-dev"
       optional-workflows: "build-preview,build-e2e-assets--hr-web-app"
     secrets:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      GH_TOKEN: ${{ secrets.GH_DISPATCH_TOKEN }}
