@@ -202,7 +202,6 @@ module.exports = async ({ github, context, core, eventPayload }) => {
                 await github.rest.actions.getPendingDeploymentsForRun({
                   owner,
                   repo,
-                  run_id: matchingRunInBatch.id,
                 });
               console.log("pendingDeployments", pendingDeployments);
               const needsApprovalForEnv = pendingDeployments.some(
