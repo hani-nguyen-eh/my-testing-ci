@@ -189,7 +189,6 @@ module.exports = async ({ github, context, core, eventPayload }) => {
             }
           );
 
-          let targetRun = null;
           for await (const { data: runs } of runsIterator) {
             const matchingRunInBatch = runs.find(
               (run) => run.path === `.github/workflows/${workflow}.yml`
@@ -201,6 +200,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
                 await github.rest.actions.getPendingDeploymentsForRun({
                   owner,
                   repo,
+                  run_id: matchingRunInBatch.id,
                 });
               console.log("pendingDeployments", pendingDeployments);
               const needsApprovalForEnv = pendingDeployments.some(
@@ -210,9 +210,8 @@ module.exports = async ({ github, context, core, eventPayload }) => {
               );
               console.log("needsApprovalForEnv", needsApprovalForEnv);
               if (needsApprovalForEnv) {
-                targetRun = matchingRunInBatch; // Found the run we need to approve
                 console.log(
-                  `Found target run ID: ${targetRun.id} waiting for environment ${targetEnvId}.`
+                  `Found target run ID: ${matchingRunInBatch.id} waiting for environment ${targetEnvId}.`
                 );
                 break; // Stop searching pages
               } else {
@@ -224,20 +223,20 @@ module.exports = async ({ github, context, core, eventPayload }) => {
           } // End run iteration
 
           // 2. Approve if found
-          if (targetRun) {
+          if (matchingRunInBatch) {
             console.log(
-              `Attempting to approve deployment for run ID ${targetRun.id} / environment ID ${targetEnvId}.`
+              `Attempting to approve deployment for run ID ${matchingRunInBatch.id} / environment ID ${targetEnvId}.`
             );
             await github.rest.actions.reviewPendingDeploymentsForRun({
               owner,
               repo,
-              run_id: targetRun.id,
+              run_id: matchingRunInBatch.id,
               environment_ids: [targetEnvId], // The specific environment we want to approve
               state: "approved",
               comment: `Approved via checkbox toggle in PR #${prNumber}.`,
             });
             console.log(
-              `Successfully approved deployment for run ID ${targetRun.id} and environment ID ${targetEnvId}`
+              `Successfully approved deployment for run ID ${matchingRunInBatch.id} and environment ID ${targetEnvId}`
             );
           } else {
             // This is common if the run finished, was rejected, or the comment edit happened before the run reached 'waiting' state
