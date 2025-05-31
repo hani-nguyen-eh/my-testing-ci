@@ -161,6 +161,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
           environmentMappings,
           environmentIds,
         });
+        console.log("targetEnvId", targetEnvId);
 
         // Only process approvals if environment mapping exists
         if (!targetEnvId) {
@@ -194,7 +195,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
             const matchingRunInBatch = runs.find(
               (run) => run.name === workflow
             );
-            console.log("runs", runs);
+
             if (matchingRunInBatch) {
               // Check if this run is waiting for the specific environment
               const { data: pendingDeployments } =
@@ -203,12 +204,13 @@ module.exports = async ({ github, context, core, eventPayload }) => {
                   repo,
                   run_id: matchingRunInBatch.id,
                 });
+              console.log("pendingDeployments", pendingDeployments);
               const needsApprovalForEnv = pendingDeployments.some(
                 (dep) =>
                   dep.environment?.id === targetEnvId &&
                   dep.waiting_for_reviewers
               );
-
+              console.log("needsApprovalForEnv", needsApprovalForEnv);
               if (needsApprovalForEnv) {
                 targetRun = matchingRunInBatch; // Found the run we need to approve
                 console.log(
