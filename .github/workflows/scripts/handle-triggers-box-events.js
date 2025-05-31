@@ -196,6 +196,8 @@ module.exports = async ({ github, context, core, eventPayload }) => {
               (run) => run.name === workflow
             );
 
+            console.log("matchingRunInBatch", matchingRunInBatch, runs);
+
             if (matchingRunInBatch) {
               // Check if this run is waiting for the specific environment
               const { data: pendingDeployments } =
