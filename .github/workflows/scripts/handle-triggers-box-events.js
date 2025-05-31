@@ -191,13 +191,13 @@ module.exports = async ({ github, context, core, eventPayload }) => {
 
           let targetRun = null;
           for await (const { data: runs } of runsIterator) {
-            // Filter for the specific workflow name IN THIS BATCH
             const matchingRunInBatch = runs.find(
-              (run) => run.name === workflow
+              (run) => run.path === `.github/workflows/${workflow}.yml`
             );
-
-            console.log("matchingRunInBatch", matchingRunInBatch, runs);
-
+            console.log(
+              "runs",
+              runs.map((r) => ({ name: r.name, path: r.path }))
+            );
             if (matchingRunInBatch) {
               // Check if this run is waiting for the specific environment
               const { data: pendingDeployments } =
