@@ -24,7 +24,7 @@ module.exports = {
     console.log(
       `Found environment mapping: ${workflow} -> ${envName} (ID: ${envId})`
     );
-    return envId;
+    return Number(envId);
   },
   createWorkflowRegex: (checkboxName, isChecked) => {
     const escapedCheckboxName = checkboxName.replace(
