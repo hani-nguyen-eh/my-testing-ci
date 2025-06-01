@@ -9,6 +9,5 @@ jobs:
   build:
     environment: Development
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
     steps:
       - run: echo "Hello, world! Build Dev"
