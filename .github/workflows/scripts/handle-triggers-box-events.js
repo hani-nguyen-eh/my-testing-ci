@@ -194,7 +194,6 @@ module.exports = async ({ github, context, core, eventPayload }) => {
             const matchingRunInBatch = runs.find(
               (run) => run.path === `.github/workflows/${workflow}.yml`
             );
-            console.log("matchingRunInBatch", matchingRunInBatch);
 
             if (matchingRunInBatch) {
               // Check if this run is waiting for the specific environment
@@ -212,7 +211,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
               );
               console.log("needsApprovalForEnv", needsApprovalForEnv);
               if (needsApprovalForEnv) {
-                targetRun = matchingRunInBatch; // Found the run we need to approve
+                targetRun = matchingRunInBatch;
                 console.log(
                   `Found target run ID: ${targetRun.id} waiting for environment ${targetEnvId}.`
                 );
@@ -224,6 +223,16 @@ module.exports = async ({ github, context, core, eventPayload }) => {
               }
             }
           } // End run iteration
+
+          // trigger if no environment protection
+          if (!targetRun && !environmentIds[targetEnvId]) {
+            await github.rest.actions.createWorkflowDispatch({
+              owner,
+              repo,
+              workflow_id: `${workflow}.yml`,
+              ref: branchName,
+            });
+          }
 
           // 2. Approve if found
           if (targetRun) {
@@ -246,12 +255,6 @@ module.exports = async ({ github, context, core, eventPayload }) => {
             console.warn(
               `No 'waiting' workflow run found for '${workflow}' with SHA ${commitHash} that requires approval for environment ID ${targetEnvId}. Cannot approve.`
             );
-            await github.rest.actions.createWorkflowDispatch({
-              owner,
-              repo,
-              workflow_id: `${workflow}.yml`,
-              ref: branchName,
-            });
           }
         } catch (error) {
           // Log error but don't fail the whole script
