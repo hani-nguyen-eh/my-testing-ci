@@ -1,4 +1,4 @@
-name: Handle triggers box events (call shared workflow)
+name: Handle triggers box events
 
 on:
   issue_comment:
