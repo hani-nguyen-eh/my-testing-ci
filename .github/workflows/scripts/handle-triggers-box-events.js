@@ -205,7 +205,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
                 });
               console.log("pendingDeployments", pendingDeployments);
               const needsApprovalForEnv = pendingDeployments.some(
-                (dep) => dep.environment?.id === targetEnvId
+                (dep) => dep.environment?.id === Number(targetEnvId)
               );
               console.log("needsApprovalForEnv", needsApprovalForEnv);
               if (needsApprovalForEnv) {
