@@ -97,7 +97,7 @@ module.exports = async ({ github, context, core }) => {
   let dateHCM, timeHCM, dateSYD, timeSYD;
   try {
     options.timeZone = "Asia/Ho_Chi_Minh";
-    const formatterHCM = new Intl.DateTimeFormat("en-VN", options);
+    const formatterHCM = new Intl.DateTimeFormat("vi-VN", options);
     [dateHCM, timeHCM] = formatterHCM.format(now).split(", ");
 
     options.timeZone = "Australia/Sydney";
