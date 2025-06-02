@@ -48,9 +48,6 @@ module.exports = {
 
     const patternString = part1 + escapedCheckboxName + part2;
 
-    // Optional debug log, can be uncommented if needed
-    // console.log(`DEBUG Regex for "${checkboxName}" (isChecked: ${isChecked}): "${patternString}"`);
-
     return new RegExp(patternString);
   },
 };
