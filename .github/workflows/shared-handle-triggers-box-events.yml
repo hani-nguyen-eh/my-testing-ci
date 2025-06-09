@@ -6,14 +6,8 @@ on:
       event-payload:
         required: true
         type: string
-      required-workflows:
-        required: true
-        type: string
-      optional-workflows:
-        required: false
-        type: string
       environment-mappings:
-        required: false
+        required: true
         type: string
         description: 'JSON string mapping workflow names to environment names, e.g. {"build-dev": "Development", "build-preview": "Preview"}'
     secrets:
@@ -27,8 +21,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ACTION_BOT: "hani-nguyen-eh"
-      REQUIRED_WORKFLOWS: ${{ inputs.required-workflows }}
-      OPTIONAL_WORKFLOWS: ${{ inputs.optional-workflows }}
       ENVIRONMENT_MAPPINGS: ${{ inputs.environment-mappings }}
     steps:
       - name: Checkout code

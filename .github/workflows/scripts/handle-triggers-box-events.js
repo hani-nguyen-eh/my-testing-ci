@@ -1,5 +1,4 @@
 const {
-  splitWorkflows,
   getEnvIdForWorkflow,
   createWorkflowRegex,
 } = require("./helpers/helpers.js");
@@ -12,12 +11,6 @@ module.exports = async ({ github, context, core, eventPayload }) => {
   } = context;
   // Read BOT name from env var, fallback to default
   const actionBot = process.env.ACTION_BOT || "hani-nguyen-eh";
-  const requiredWorkflowsArray = splitWorkflows({
-    workflows: process.env.REQUIRED_WORKFLOWS,
-  });
-  const optionalWorkflowsArray = splitWorkflows({
-    workflows: process.env.OPTIONAL_WORKFLOWS,
-  });
 
   // Parse environment mappings from input
   let environmentMappings;
@@ -27,6 +20,10 @@ module.exports = async ({ github, context, core, eventPayload }) => {
     core.setFailed(`Failed to parse environment mappings: ${error.message}`);
     return;
   }
+
+  const allWorkflows = Object.keys(environmentMappings);
+  console.log("Workflows to process:", allWorkflows);
+  console.log("Environment mappings:", environmentMappings);
 
   // --- Basic Event Validation ---
   if (
@@ -87,7 +84,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
     core.setFailed(
       `Failed to get PR details for PR #${prNumber}: ${error.message}`
     );
-    return; // Cannot proceed without branch name
+    return;
   }
 
   // --- Extract Commit Hash ---
@@ -96,7 +93,6 @@ module.exports = async ({ github, context, core, eventPayload }) => {
   if (commitHash) {
     console.log(`Commit hash extracted: ${commitHash}`);
   } else {
-    // This might be okay if only dispatching non-approval workflows
     console.warn(
       "Could not extract commit hash from comment body. Workflow approvals will be skipped."
     );
@@ -104,7 +100,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
 
   // --- Get Environment IDs ---
   console.log("Fetching environment IDs...");
-  const environmentIds = {}; // Store environment IDs by name
+  const environmentIds = {};
 
   try {
     const { data: environmentsResponse } =
@@ -225,7 +221,10 @@ module.exports = async ({ github, context, core, eventPayload }) => {
           } // End run iteration
 
           // trigger if no environment protection
-          if (!targetRun && !environmentIds[targetEnvId]) {
+          if (
+            !targetRun &&
+            !Object.values(environmentIds).includes(targetEnvId)
+          ) {
             await github.rest.actions.createWorkflowDispatch({
               owner,
               repo,
@@ -257,8 +256,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
             );
           }
         } catch (error) {
-          // Log error but don't fail the whole script
-          core.error(
+          core.setFailed(
             `Failed to process approval for workflow '${workflow}': ${error.message}`
           );
         }
@@ -272,8 +270,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
       "Skipping workflow approvals processing as commit hash was not found in the comment."
     );
   } else {
-    await processWorkflowApprovals(requiredWorkflowsArray);
-    await processWorkflowApprovals(optionalWorkflowsArray);
+    await processWorkflowApprovals(allWorkflows);
   }
 
   console.log("Checkbox analysis script complete.");
