@@ -11,8 +11,6 @@ jobs:
     if: github.event.issue.pull_request != null && github.event.comment.user.login == 'hani-nguyen-eh'
     with:
       event-payload: ${{ toJSON(github.event) }}
-      required-workflows: "build-dev"
-      optional-workflows: "build-preview,build-e2e-assets--hr-web-app"
-      environment-mappings: '{"build-dev": "Development", "build-preview": "Preview"}'
+      environment-mappings: '{"build-dev": "Development", "build-preview": "Preview", "build-e2e-assets--hr-web-app": null}'
     secrets:
       GH_TOKEN: ${{ secrets.GH_DISPATCH_TOKEN }}
