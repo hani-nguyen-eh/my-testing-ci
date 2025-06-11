@@ -1,0 +1,38 @@
+name: 'Handle Triggers Box Events'
+description: 'Parses a comment event and dispatches workflows based on checked boxes.'
+
+inputs:
+  event-payload:
+    description: 'The JSON payload of the event to process (e.g., a comment body).'
+    required: true
+  environment-mappings:
+    description: 'JSON string mapping workflow names to environment names.'
+    required: true
+  github-token:
+    description: 'The GitHub token for API calls.'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run handle events script
+      uses: actions/github-script@v7
+      # Environment variables are passed directly to the script's runtime
+      env:
+        ACTION_BOT: 'devops-eh'
+        ENVIRONMENT_MAPPINGS: ${{ inputs.environment-mappings }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          # 1. Get the path to your local script file.
+          #    This assumes the script is in a 'scripts' folder next to this action.yml
+          const script = require(`${{ github.action_path }}/scripts/handle-triggers-box-events.js`);
+
+          # 2. Safely parse the JSON payload from the input.
+          #    Using toJSON is important to handle special characters correctly.
+          const eventPayload = JSON.parse(${{ toJSON(inputs.event-payload) }});
+
+          # 3. Execute the script with all the necessary context.
+          await script({github, context, core, eventPayload});
+
+          console.log("Checkbox analysis complete.");

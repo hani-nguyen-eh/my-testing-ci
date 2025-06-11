@@ -14,12 +14,19 @@ concurrency:
 jobs:
   create-triggers-box-comment:
     name: Create triggers box comment
-    uses: ./.github/workflows/shared-setup-triggers-box-comment.yml
-    with:
-      pr-number: ${{ github.event.pull_request.number }}
-      commit-hash: ${{ github.event.pull_request.head.sha }}
-      head-ref: ${{ github.head_ref }}
-      required-workflows: "build-dev"
-      optional-workflows: "build-preview,build-e2e-assets--hr-web-app"
-    secrets:
-      GH_TOKEN: ${{ secrets.GH_DISPATCH_TOKEN }}
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup triggers box comment
+        uses: ./.github/actions/setup-trigger-box-comment
+        with:
+          pr-number: ${{ github.event.pull_request.number }}
+          commit-hash: ${{ github.event.pull_request.head.sha }}
+          head-ref: ${{ github.head_ref }}
+          required-workflows: "build-dev"
+          optional-workflows: "build-preview,build-e2e-assets--hr-web-app"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
