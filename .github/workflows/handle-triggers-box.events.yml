@@ -20,4 +20,4 @@ jobs:
           required-workflows: "build-dev"
           optional-workflows: "build-preview,build-e2e-assets--hr-web-app"
           environment-mappings: '{"build-dev": "Development", "build-preview": "Preview"}'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GH_DISPATCH_TOKEN }}
