@@ -29,4 +29,4 @@ jobs:
           head-ref: ${{ github.head_ref }}
           required-workflows: "build-dev"
           optional-workflows: "build-preview,build-e2e-assets--hr-web-app"
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GH_DISPATCH_TOKEN }}
