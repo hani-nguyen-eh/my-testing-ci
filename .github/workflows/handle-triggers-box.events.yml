@@ -17,7 +17,5 @@ jobs:
         uses: ./.github/actions/handle-triggers-box-events
         with:
           event-payload: ${{ toJSON(github.event) }}
-          required-workflows: "build-dev"
-          optional-workflows: "build-preview,build-e2e-assets--hr-web-app"
           environment-mappings: '{"build-dev": "Development", "build-preview": "Preview"}'
           github-token: ${{ secrets.GH_DISPATCH_TOKEN }}
