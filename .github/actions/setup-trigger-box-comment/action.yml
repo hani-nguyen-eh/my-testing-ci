@@ -32,7 +32,7 @@ runs:
         HEAD_REF: ${{ inputs.head-ref }}
         REQUIRED_WORKFLOWS: ${{ inputs.required-workflows }}
         OPTIONAL_WORKFLOWS: ${{ inputs.optional-workflows }}
-        ACTION_BOT: 'devops-eh'
+        ACTION_BOT: 'hani-nguyen-eh'
       with:
         github-token: ${{ inputs.github-token }}
         script: |
