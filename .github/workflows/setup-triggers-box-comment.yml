@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup triggers box comment
-        uses: ./.github/actions/setup-trigger-box-comment/action.yml
+        uses: ./.github/actions/setup-trigger-box-comment
         with:
           pr-number: ${{ github.event.pull_request.number }}
           commit-hash: ${{ github.event.pull_request.head.sha }}
