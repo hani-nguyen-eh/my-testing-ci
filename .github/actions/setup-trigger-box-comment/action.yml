@@ -36,7 +36,5 @@ runs:
       with:
         github-token: ${{ inputs.github-token }}
         script: |
-          // ${{ github.action_path }} is a special variable that gives the absolute
-          // path to the directory where this action.yml file is located.
           const script = require(`${{ github.action_path }}/script.js`);
           await script({github, context, core});
