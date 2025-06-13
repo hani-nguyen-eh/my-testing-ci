@@ -18,4 +18,4 @@ jobs:
         with:
           event-payload: ${{ toJSON(github.event) }}
           environment-mappings: '{"build-dev": "Development", "build-preview": "Preview"}'
-          github-token: ${{ secrets.GH_TOKEN }}
+          github-token: ${{ secrets.GH_DISPATCH_TOKEN }}
