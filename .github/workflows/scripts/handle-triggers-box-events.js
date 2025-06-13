@@ -4,8 +4,6 @@ const {
 } = require("./helpers/helpers.js");
 
 module.exports = async ({ github, context, core, eventPayload }) => {
-  const me = await github.rest.users.getAuthenticated();
-  console.log("Current token belongs to:", me.data.login);
   const {
     repo: { owner, repo },
   } = context;
