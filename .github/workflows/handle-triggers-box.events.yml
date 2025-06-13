@@ -14,8 +14,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Handle triggers box events
-        uses: ./.github/actions/handle-triggers-box-events
+        uses: ./.github/actions/handle-triggers-box-events/action.yml
         with:
           event-payload: ${{ toJSON(github.event) }}
+          required-workflows: "build-dev"
+          optional-workflows: "build-preview,build-e2e-assets--hr-web-app"
           environment-mappings: '{"build-dev": "Development", "build-preview": "Preview"}'
           github-token: ${{ secrets.GH_DISPATCH_TOKEN }}

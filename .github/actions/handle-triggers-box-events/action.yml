@@ -25,7 +25,7 @@ runs:
         script: |
           # 1. Get the path to your local script file.
           #    This assumes the script is in a 'scripts' folder next to this action.yml
-          const script = require(`${{ github.action_path }}/scripts/handle-triggers-box-events.js`);
+          const script = require(`${{ github.action_path }}/script.js`);
 
           # 2. Safely parse the JSON payload from the input.
           #    Using toJSON is important to handle special characters correctly.
