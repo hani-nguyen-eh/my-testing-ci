@@ -1,0 +1,54 @@
+name: Shared - Setup triggers box comment
+
+on:
+  workflow_call:
+    inputs:
+      pr-number:
+        required: true
+        type: number
+      commit-hash:
+        required: true
+        type: string
+      head-ref:
+        required: true
+        type: string
+      required-workflows:
+        required: true
+        type: string
+      optional-workflows:
+        required: false
+        type: string
+    secrets:
+      GH_TOKEN:
+        required: true
+
+concurrency:
+  group: ${{ github.workflow }}-pr-${{ inputs.pr-number }}
+  cancel-in-progress: true
+
+jobs:
+  create-triggers-box-comment:
+    name: Create triggers box comment
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    env:
+      ACTION_BOT: "hani-nguyen-eh"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run setup comment script
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ inputs.pr-number }}
+          COMMIT_HASH: ${{ inputs.commit-hash }}
+          HEAD_REF: ${{ inputs.head-ref }}
+          REQUIRED_WORKFLOWS: ${{ inputs.required-workflows }}
+          OPTIONAL_WORKFLOWS: ${{ inputs.optional-workflows }}
+          ACTION_BOT: "hani-nguyen-eh"
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            // Use correct relative path from workspace root
+            const script = require('.github/workflows/scripts/setup-triggers-box-comment.js');
+            await script({github, context, core});

@@ -1,23 +1,15 @@
 name: Handle triggers box events
-
 on:
   issue_comment:
     types: [edited]
 
 jobs:
-  handle-events:
-    name: Handle triggers box events
-    runs-on: ubuntu-latest
+  call-handle-events-workflow:
+    name: Call handle events workflow
+    uses: ./.github/workflows/shared-handle-triggers-box-events.yml
     if: github.event.issue.pull_request != null && github.event.comment.user.login == 'hani-nguyen-eh'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Handle triggers box events
-        uses: ./.github/actions/handle-triggers-box-events
-        with:
-          event-payload: ${{ toJSON(github.event) }}
-          required-workflows: "build-dev"
-          optional-workflows: "build-preview,build-e2e-assets--hr-web-app"
-          environment-mappings: '{"build-dev": "Development", "build-preview": "Preview"}'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+    with:
+      event-payload: ${{ toJSON(github.event) }}
+      environment-mappings: '{"build-dev": "Development", "build-preview": "Preview", "build-e2e-assets--hr-web-app": null}'
+    secrets:
+      GH_TOKEN: ${{ secrets.GH_DISPATCH_TOKEN }}
