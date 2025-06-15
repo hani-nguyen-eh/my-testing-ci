@@ -1,5 +1,4 @@
 name: Handle triggers box events
-
 on:
   issue_comment:
     types: [edited]
