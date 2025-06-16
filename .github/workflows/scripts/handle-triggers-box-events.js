@@ -223,7 +223,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
           // trigger if no environment protection
           console.log(
             "environmentIds type",
-            typeof environmentIds[0],
+            typeof Object.values(environmentIds)[0],
             environmentIds,
             targetEnvId
           );
