@@ -24,30 +24,23 @@ module.exports = {
     console.log(
       `Found environment mapping: ${workflow} -> ${envName} (ID: ${envId})`
     );
-    return Number(envId);
+    return envId;
   },
   createWorkflowRegex: (checkboxName, isChecked) => {
-    const escapedCheckboxName = checkboxName.replace(
-      /[\\^$.*+?()[\]{}|]/g,
-      "\\$&"
-    );
-    let checkboxMarkerPattern;
+    const escapedCheckboxName = RegExp.escape(checkboxName);
 
-    if (isChecked) {
-      checkboxMarkerPattern = "\\[\\s*[xX]\\s*\\]"; // Matches [x] or [X]
-    } else {
-      checkboxMarkerPattern = "\\[\\s*\\]"; // Matches [ ]
-    }
+    const checkboxMarker = isChecked
+      ? "\\[\\s*[xX]\\s*\\]" // Matches [x] or [X]
+      : "\\[\\s*\\]"; // Matches [ ]
 
-    // Construct the full pattern string
-    // Part 1: The checkbox marker (e.g., "[ ]" or "[x]") followed by a space and a backtick
-    const part1 = checkboxMarkerPattern + "\\s*`";
-    // Part 2: The rest of the pattern after the checkbox name and its closing backtick
-    const part2 =
-      "`\\s*on\\s*GitHub\\s*Actions\\s*at\\s*this\\s*\\[workflow\\]";
+    // More readable pattern construction
+    const pattern = [
+      checkboxMarker, // [ ] or [x]
+      "\\s*`", // whitespace and opening backtick
+      escapedCheckboxName, // escaped workflow name
+      "`\\s*on\\s*GitHub\\s*Actions\\s*at\\s*this\\s*\\[workflow\\]", // rest of the pattern
+    ].join("");
 
-    const patternString = part1 + escapedCheckboxName + part2;
-
-    return new RegExp(patternString);
+    return new RegExp(pattern);
   },
 };
