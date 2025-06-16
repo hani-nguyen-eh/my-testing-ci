@@ -221,6 +221,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
           } // End run iteration
 
           // trigger if no environment protection
+          console.log("environmentIds type", typeof environmentIds[0]);
           if (
             !targetRun &&
             !Object.values(environmentIds).includes(targetEnvId)
