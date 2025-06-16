@@ -113,7 +113,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
     ) {
       // Create a map of environment names to IDs
       environmentsResponse.environments.forEach((env) => {
-        environmentIds[env.name] = env.id.toString();
+        environmentIds[env.name] = env.id;
       });
 
       console.log(
@@ -219,7 +219,12 @@ module.exports = async ({ github, context, core, eventPayload }) => {
           } // End run iteration
 
           // trigger if no environment protection
-          console.log("environmentIds type", typeof environmentIds[0]);
+          console.log(
+            "environmentIds type",
+            typeof environmentIds[0],
+            environmentIds,
+            targetEnvId
+          );
           if (
             !targetRun &&
             !Object.values(environmentIds).includes(targetEnvId)
