@@ -115,7 +115,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
     ) {
       // Create a map of environment names to IDs
       environmentsResponse.environments.forEach((env) => {
-        environmentIds[env.name] = env.id.toString();
+        environmentIds[env.name] = env.id;
       });
 
       console.log(
