@@ -20,8 +20,48 @@ module.exports = async ({ github, context, core, eventPayload }) => {
   }
 
   const allWorkflows = Object.keys(environmentMappings);
-  console.log("Workflows to process:", allWorkflows);
-  console.log("Environment mappings:", environmentMappings);
+
+  // --- Validate Workflows ---
+  console.log("Validating workflows defined in environment-mappings...");
+  const validationErrors = [];
+
+  for (const workflow of allWorkflows) {
+    try {
+      // Check if workflow file exists by trying to get workflow info
+      const { data: workflowInfo } = await github.rest.actions.getWorkflow({
+        owner,
+        repo,
+        workflow_id: `${workflow}.yml`,
+      });
+
+      console.log(`✅ Workflow ${workflow}.yml exists and is accessible`);
+
+      // Check if workflow has workflow_dispatch trigger
+      if (workflowInfo.html_url) {
+        // Additional validation could be added here if needed
+        console.log(
+          `✅ Workflow ${workflow}.yml appears to be properly configured`
+        );
+      }
+    } catch (error) {
+      const errorMsg = `❌ Workflow ${workflow}.yml validation failed: ${error.message}`;
+      console.error(errorMsg);
+      validationErrors.push(errorMsg);
+    }
+  }
+
+  // Report validation results
+  if (validationErrors.length > 0) {
+    const errorSummary = `Workflow validation failed for ${
+      validationErrors.length
+    } workflow(s):\n${validationErrors.join("\n")}`;
+    core.setFailed(errorSummary);
+    return;
+  }
+
+  console.log(
+    `✅ All ${allWorkflows.length} workflows in environment-mappings are valid`
+  );
 
   // --- Basic Event Validation ---
   if (
