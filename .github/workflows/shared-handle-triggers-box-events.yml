@@ -26,7 +26,6 @@ jobs:
     env:
       ACTION_BOT: "hani-nguyen-eh"
       ENVIRONMENT_MAPPINGS: ${{ inputs.environment-mappings }}
-      DOCUMENT_LINK: ${{ inputs.document-link }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
