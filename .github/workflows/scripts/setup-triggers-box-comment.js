@@ -27,7 +27,7 @@ module.exports = async ({ github, context, core }) => {
   const {
     repo: { owner, repo },
   } = context;
-  const commentIdentifier = `<!-- workflow-triggers--frontend-core-${prNumber} -->`;
+  const commentIdentifier = `<!-- workflow-triggers--${repo}-${prNumber} -->`;
 
   console.log(
     `Starting script for PR #${prNumber} on repo ${owner}/${repo} at commit ${commitHash}`
@@ -113,7 +113,7 @@ module.exports = async ({ github, context, core }) => {
   }
 
   const messageBody = `# Workflow triggers ${commentIdentifier}\n
-_For details on each workflow or feedback, please check out this [document](https://employmenthero.atlassian.net/wiki/spaces/FC/pages/2788917584/Draft+RFC+Pull+Request+Automation+Commands)_
+_For details on each workflow or feedback, please check out this [document](${documentLink})_
 
 ## Required
 ${generateWorkflowMarkdownArray(requiredWorkflowsArray)}

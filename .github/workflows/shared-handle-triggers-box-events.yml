@@ -10,6 +10,10 @@ on:
         required: true
         type: string
         description: 'JSON string mapping workflow names to environment names, e.g. {"build-dev": "Development", "build-preview": "Preview"}'
+      document-link:
+        required: true
+        type: string
+        description: "Link to the document that contains the details of the workflows"
     secrets:
       GH_TOKEN:
         required: true
@@ -22,6 +26,7 @@ jobs:
     env:
       ACTION_BOT: "hani-nguyen-eh"
       ENVIRONMENT_MAPPINGS: ${{ inputs.environment-mappings }}
+      DOCUMENT_LINK: ${{ inputs.document-link }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
