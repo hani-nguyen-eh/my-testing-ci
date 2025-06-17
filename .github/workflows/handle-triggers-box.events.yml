@@ -7,10 +7,12 @@ on:
 jobs:
   call-handle-events-workflow:
     name: Call handle events workflow
-    uses: ./.github/workflows/shared-handle-triggers-box-events.yml
-    if: github.event.issue.pull_request != null && github.event.comment.user.login == 'hani-nguyen-eh'
-    with:
-      event-payload: ${{ toJSON(github.event) }}
-      environment-mappings: '{"build-dev": "Development", "build-preview": "Preview", "build-e2e-assets--hr-web-app": null}'
-    secrets:
-      GH_TOKEN: ${{ secrets.GH_DISPATCH_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call handle events workflow
+        uses: thinkei/shared-actions/.github/actions/handle-triggers-box-events@chore/make-share-workflow
+        if: github.event.issue.pull_request != null && github.event.comment.user.login == 'hani-nguyen-eh'
+        with:
+          event-payload: ${{ toJSON(github.event) }}
+          environment-mappings: '{"build-dev": "Development", "build-preview": "Preview", "build-e2e-assets--hr-web-app": null}'
+          github-token: ${{ secrets.GH_DISPATCH_TOKEN }}
