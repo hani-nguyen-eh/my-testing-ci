@@ -36,35 +36,32 @@ module.exports = async ({ github, context, core }) => {
 
   // 1. Find existing comment
   console.log(`Searching for existing comment by ${actionBot}...`);
-  let existingCommentId = null;
-  try {
-    // Use iterator for potentially large number of comments
-    const commentsIterator = github.paginate.iterator(
-      github.rest.issues.listComments,
-      {
-        owner,
-        repo,
-        issue_number: prNumber,
-        per_page: 100,
-      }
-    );
 
-    for await (const { data: comments } of commentsIterator) {
-      const foundComment = comments.find(
+  const findExistingComment = async () => {
+    try {
+      const allComments = await github.paginate(
+        github.rest.issues.listComments,
+        { owner, repo, issue_number: prNumber, per_page: 100 }
+      );
+
+      const foundComment = allComments.find(
         (comment) =>
           comment.user.login === actionBot &&
           comment.body.includes(commentIdentifier)
       );
+
       if (foundComment) {
-        existingCommentId = foundComment.id;
-        console.log(`Found existing comment with ID: ${existingCommentId}`);
-        break;
+        console.log(`Found existing comment with ID: ${foundComment.id}`);
+        return foundComment.id;
       }
+      return null;
+    } catch (error) {
+      core.setFailed(`Failed to list comments: ${error.message}`);
+      throw error;
     }
-  } catch (error) {
-    core.setFailed(`Failed to list comments: ${error.message}`);
-    return;
-  }
+  };
+
+  const existingCommentId = await findExistingComment();
 
   // 2. Formulate the comment body
   console.log("Formulating the GitHub comment...");
