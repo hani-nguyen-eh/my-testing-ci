@@ -11,6 +11,7 @@ module.exports = async ({ github, context, core }) => {
   const optionalWorkflowsArray = splitWorkflows({
     workflows: process.env.OPTIONAL_WORKFLOWS,
   });
+  const documentLink = process.env.DOCUMENT_LINK;
 
   if (
     isNaN(prNumber) ||
