@@ -67,10 +67,11 @@ module.exports = async ({ github, context, core }) => {
 
   // 2. Formulate the comment body
   console.log("Formulating the GitHub comment...");
-  const encodedBranchName = encodeURIComponent(headRef);
 
   function generateWorkflowMarkdown(workflowName) {
-    const workflowUrl = `https://github.com/${owner}/${repo}/actions/workflows/${workflowName}.yml?query=branch%3A${encodedBranchName}`;
+    const workflowUrl = `https://github.com/${owner}/${repo}/actions/workflows/${workflowName}.yml?query=${encodeURIComponent(
+      `branch:${headRef}`
+    )}`;
     return `[ ] \`${workflowName}\` on GitHub Actions at this [workflow](${workflowUrl}).`;
   }
 
