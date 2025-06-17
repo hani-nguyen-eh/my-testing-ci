@@ -18,6 +18,9 @@ on:
       optional-workflows:
         required: false
         type: string
+      document-link:
+        required: true
+        type: string
     secrets:
       GH_TOKEN:
         required: true
@@ -31,8 +34,6 @@ jobs:
     name: Create triggers box comment
     timeout-minutes: 5
     runs-on: ubuntu-latest
-    env:
-      ACTION_BOT: "hani-nguyen-eh"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -46,6 +47,7 @@ jobs:
           REQUIRED_WORKFLOWS: ${{ inputs.required-workflows }}
           OPTIONAL_WORKFLOWS: ${{ inputs.optional-workflows }}
           ACTION_BOT: "hani-nguyen-eh"
+          DOCUMENT_LINK: ${{ inputs.document-link }}
         with:
           github-token: ${{ secrets.GH_TOKEN }}
           script: |
