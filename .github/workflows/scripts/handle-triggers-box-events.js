@@ -11,13 +11,16 @@ module.exports = async ({ github, context, core, eventPayload }) => {
   const actionBot = process.env.ACTION_BOT || "hani-nguyen-eh";
 
   // Parse environment mappings from input
-  let environmentMappings;
-  try {
-    environmentMappings = JSON.parse(process.env.ENVIRONMENT_MAPPINGS || "{}");
-  } catch (error) {
-    core.setFailed(`Failed to parse environment mappings: ${error.message}`);
-    return;
-  }
+  const parseEnvironmentMappings = () => {
+    try {
+      return JSON.parse(process.env.ENVIRONMENT_MAPPINGS || "{}");
+    } catch (error) {
+      core.setFailed(`Failed to parse environment mappings: ${error.message}`);
+      throw error;
+    }
+  };
+
+  const environmentMappings = parseEnvironmentMappings();
 
   const allWorkflows = Object.keys(environmentMappings);
 
@@ -108,22 +111,25 @@ module.exports = async ({ github, context, core, eventPayload }) => {
   );
 
   // --- Get Branch Name ---
-  let branchName;
-  try {
-    console.log("Fetching PR details to get branch name...");
-    const { data: prDetails } = await github.rest.pulls.get({
-      owner,
-      repo,
-      pull_number: prNumber,
-    });
-    branchName = prDetails.head.ref;
-    console.log(`Branch name: ${branchName}`);
-  } catch (error) {
-    core.setFailed(
-      `Failed to get PR details for PR #${prNumber}: ${error.message}`
-    );
-    return;
-  }
+  const fetchBranchName = async () => {
+    try {
+      console.log("Fetching PR details to get branch name...");
+      const { data: prDetails } = await github.rest.pulls.get({
+        owner,
+        repo,
+        pull_number: prNumber,
+      });
+      console.log(`Branch name: ${prDetails.head.ref}`);
+      return prDetails.head.ref;
+    } catch (error) {
+      core.setFailed(
+        `Failed to get PR details for PR #${prNumber}: ${error.message}`
+      );
+      throw error;
+    }
+  };
+
+  const branchName = await fetchBranchName();
 
   // --- Extract Commit Hash ---
   const commitHashMatch = commentBody.match(/commit ([a-f0-9]{40})/);
