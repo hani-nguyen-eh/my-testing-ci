@@ -1,7 +1,7 @@
 name: Handle triggers box events
 
 on:
-  issue_comment:
+  pull_request_review_comment:
     types: [edited]
 
 jobs:
@@ -9,9 +9,16 @@ jobs:
     name: Call handle events workflow
     runs-on: ubuntu-latest
     steps:
+      - name: Debug event
+        run: |
+          echo "Event: ${{ toJSON(github.event) }}"
+          echo "Event payload: ${{ toJSON(github.event.payload) }}"
+          echo "Event pull request: ${{ toJSON(github.event.pull_request) }}"
+          echo "Event pull request user: ${{ toJSON(github.event.pull_request.user) }}"
+          echo "Event pull request user login: ${{ toJSON(github.event.pull_request.user.login) }}"
       - name: Call handle events workflow
         uses: thinkei/shared-actions/.github/actions/handle-triggers-box-events@chore/make-share-workflow
-        if: github.event.issue.pull_request != null && github.event.comment.user.login == 'hani-nguyen-eh'
+        if: github.event.pull_request != null && github.event.pull_request.user.login == 'hani-nguyen-eh'
         with:
           event-payload: ${{ toJSON(github.event) }}
           environment-mappings: '{"build-dev": "Development", "build-preview": "Preview", "build-e2e-assets--hr-web-app": null}'
