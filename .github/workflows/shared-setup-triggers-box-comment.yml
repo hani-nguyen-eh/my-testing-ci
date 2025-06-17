@@ -19,8 +19,9 @@ on:
         required: false
         type: string
       document-link:
-        required: true
+        required: false
         type: string
+        description: "Link to the document that contains the details of the workflows"
     secrets:
       GH_TOKEN:
         required: true
