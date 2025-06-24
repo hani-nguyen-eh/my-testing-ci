@@ -12,12 +12,13 @@ runs:
   steps:
     - name: Log env
       shell: bash
+      env:
+        TOKENS_VALUE: ${{ inputs.tokens_for_logging }}
       run: |
         echo "Environment variables:"
         env
         echo "--------------------------------"
         echo "GitHub event:"
-        echo "${{ inputs.tokens_for_logging }}"
+        echo "$TOKENS_VALUE"
         echo "--------------------------------"
-        TOKENS_VALUE="${{ inputs.tokens_for_logging }}"
         echo "Length of TOKENS_FOR_LOGGING: ${#TOKENS_VALUE}"
