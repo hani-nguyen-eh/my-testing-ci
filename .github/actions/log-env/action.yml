@@ -17,7 +17,7 @@ runs:
         env
         echo "--------------------------------"
         echo "GitHub event:"
-        echo ${{ inputs.tokens_for_logging }}
+        echo "${{ inputs.tokens_for_logging }}"
         echo "--------------------------------"
         TOKENS_VALUE="${{ inputs.tokens_for_logging }}"
         echo "Length of TOKENS_FOR_LOGGING: ${#TOKENS_VALUE}"
