@@ -8,5 +8,8 @@ jobs:
   log-env:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Log env
         uses: ./.github/actions/log-env
