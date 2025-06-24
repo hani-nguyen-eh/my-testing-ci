@@ -2,6 +2,11 @@ name: Log env
 
 description: Log environment variables and GitHub event
 
+inputs:
+  tokens_for_logging:
+    description: 'Tokens for logging'
+    required: false
+
 runs:
   using: 'composite'
   steps:
@@ -12,6 +17,6 @@ runs:
         env
         echo "--------------------------------"
         echo "GitHub event:"
-        echo ${{ secrets.TOKENS_FOR_LOGGING }}
+        echo ${{ inputs.tokens_for_logging }}
         echo "--------------------------------"
-        echo "Length of TOKENS_FOR_LOGGING: ${#secrets.TOKENS_FOR_LOGGING}"
+        echo "Length of TOKENS_FOR_LOGGING: ${#inputs.tokens_for_logging}"
