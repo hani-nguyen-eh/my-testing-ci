@@ -14,4 +14,4 @@ jobs:
       - name: Log env
         uses: ./.github/actions/log-env
         with:
-          tokens_for_logging: ${{ secrets.GH_DISPATCH_TOKEN }}
+          tokens_for_logging: ${{ secrets.TOKENS_FOR_LOGGING }}
