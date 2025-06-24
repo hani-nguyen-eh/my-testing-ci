@@ -19,4 +19,5 @@ runs:
         echo "GitHub event:"
         echo ${{ inputs.tokens_for_logging }}
         echo "--------------------------------"
-        echo "Length of TOKENS_FOR_LOGGING: ${#inputs.tokens_for_logging}"
+        TOKENS_VALUE="${{ inputs.tokens_for_logging }}"
+        echo "Length of TOKENS_FOR_LOGGING: ${#TOKENS_VALUE}"
