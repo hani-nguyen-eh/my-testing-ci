@@ -1,0 +1,12 @@
+name: Log env
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  log-env:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log env
+        uses: ./.github/actions/log-env

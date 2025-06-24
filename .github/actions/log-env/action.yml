@@ -1,0 +1,17 @@
+name: Log env
+
+description: Log environment variables and GitHub event
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Log env
+      shell: bash
+      run: |
+        echo "Environment variables:"
+        env
+        echo "--------------------------------"
+        echo "GitHub event:"
+        echo ${{ secrets.TOKENS_FOR_LOGGING }}
+        echo "--------------------------------"
+        echo "Length of TOKENS_FOR_LOGGING: ${#secrets.TOKENS_FOR_LOGGING}"
