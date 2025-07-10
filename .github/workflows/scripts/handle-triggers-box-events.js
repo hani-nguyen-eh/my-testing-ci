@@ -3,7 +3,7 @@ const {
   waitForWorkflowRunToBeReady,
   wasToggledOn,
   fetchEnvironmentIds,
-} = require("./helpers.js");
+} = require("./helpers/helpers.js");
 
 module.exports = async ({ github, context, core, eventPayload }) => {
   const {
