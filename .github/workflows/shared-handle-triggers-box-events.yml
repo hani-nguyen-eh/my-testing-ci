@@ -37,5 +37,4 @@ jobs:
             const eventPayload = JSON.parse(${{ toJSON(inputs.event-payload) }});
             // Execute the script, passing required objects and the payload
             await script({github, context, core, eventPayload});
-
             console.log("Checkbox analysis complete.");
