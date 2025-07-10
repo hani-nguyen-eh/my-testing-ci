@@ -1,4 +1,4 @@
-createWorkflowRegex: (checkboxName, isChecked) => {
+const createWorkflowRegex = (checkboxName, isChecked) => {
   const escapedCheckboxName = checkboxName.replace(
     /[\\^$.*+?()[\]{}|]/g,
     "\\$&"
