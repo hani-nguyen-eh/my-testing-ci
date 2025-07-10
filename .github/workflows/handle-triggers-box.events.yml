@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Call handle events workflow
-        uses: thinkei/shared-actions/.github/actions/handle-triggers-box-events@chore/make-share-workflow
+        uses: ./.github/workflows/shared-handle-triggers-box-events.yml
         if: github.event.issue.pull_request != null && github.event.comment.user.login == 'hani-nguyen-eh'
         with:
           event-payload: ${{ toJSON(github.event) }}
