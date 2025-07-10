@@ -1,38 +1,38 @@
 const {
   getEnvIdForWorkflow,
-  createWorkflowRegex,
-} = require("./helpers/helpers.js");
+  waitForWorkflowRunToBeReady,
+  wasToggledOn,
+  fetchEnvironmentIds,
+} = require("./helpers.js");
 
 module.exports = async ({ github, context, core, eventPayload }) => {
-  const me = await github.rest.users.getAuthenticated();
-  console.log("Current token belongs to:", me.data.login);
   const {
     repo: { owner, repo },
   } = context;
-  // Read BOT name from env var, fallback to default
-  const actionBot = process.env.ACTION_BOT || "hani-nguyen-eh";
+  const actionBot = process.env.ACTION_BOT || "devops-eh";
 
-  // Parse environment mappings from input
-  const parseEnvironmentMappings = () => {
+  const parseWorkflowDispatchConfig = () => {
     try {
-      return JSON.parse(process.env.ENVIRONMENT_MAPPINGS || "{}");
+      return JSON.parse(process.env.WORKFLOW_DISPATCH_CONFIG_JSON || "{}");
     } catch (error) {
-      core.setFailed(`Failed to parse environment mappings: ${error.message}`);
+      core.setFailed(
+        `Failed to parse workflow dispatch config: ${error.message}`
+      );
       throw error;
     }
   };
 
-  const environmentMappings = parseEnvironmentMappings();
+  const workflowDispatchConfig = parseWorkflowDispatchConfig();
 
-  const allWorkflows = Object.keys(environmentMappings);
+  const allWorkflows = Object.keys(workflowDispatchConfig);
 
-  // --- Validate Workflows ---
-  console.log("Validating workflows defined in environment-mappings...");
+  console.log(
+    "Validating workflows defined in workflow-dispatch-config-json..."
+  );
   const validationErrors = [];
 
   for (const workflow of allWorkflows) {
     try {
-      // Check if workflow file exists by trying to get workflow info
       const { data: workflowInfo } = await github.rest.actions.getWorkflow({
         owner,
         repo,
@@ -41,9 +41,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
 
       console.log(`✅ Workflow ${workflow}.yml exists and is accessible`);
 
-      // Check if workflow has workflow_dispatch trigger
       if (workflowInfo.html_url) {
-        // Additional validation could be added here if needed
         console.log(
           `✅ Workflow ${workflow}.yml appears to be properly configured`
         );
@@ -55,17 +53,16 @@ module.exports = async ({ github, context, core, eventPayload }) => {
     }
   }
 
-  // Report validation results
   if (validationErrors.length > 0) {
     const errorSummary = `Workflow validation failed for ${
       validationErrors.length
     } workflow(s):\n${validationErrors.join("\n")}`;
     core.setFailed(errorSummary);
-    return;
+    process.exit(1);
   }
 
   console.log(
-    `✅ All ${allWorkflows.length} workflows in environment-mappings are valid`
+    `✅ All ${allWorkflows.length} workflows in workflow-dispatch-config-json are valid`
   );
 
   // --- Basic Event Validation ---
@@ -77,13 +74,13 @@ module.exports = async ({ github, context, core, eventPayload }) => {
     console.log(
       "Event payload is missing required issue or pull_request information. Skipping."
     );
-    return;
+    process.exit(1);
   }
   if (eventPayload.comment.user.login !== actionBot) {
     console.log(
       `Comment user "${eventPayload.comment.user.login}" is not the expected bot "${actionBot}". Skipping.`
     );
-    return;
+    process.exit(1);
   }
   if (
     !eventPayload.changes ||
@@ -93,7 +90,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
     console.log(
       'Event payload does not contain previous comment body ("changes.body.from"). Cannot detect changes. Skipping.'
     );
-    return;
+    process.exit(1);
   }
 
   const prUrl = eventPayload.issue.pull_request.url;
@@ -105,7 +102,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
     core.setFailed(
       `Could not parse PR number from event payload URL: ${prUrl}`
     );
-    return;
+    process.exit(1);
   }
 
   console.log(
@@ -144,74 +141,69 @@ module.exports = async ({ github, context, core, eventPayload }) => {
     );
   }
 
-  // --- Get Environment IDs ---
-  console.log("Fetching environment IDs...");
-  const environmentIds = {};
-
-  try {
-    const { data: environmentsResponse } =
-      await github.rest.repos.getAllEnvironments({
-        owner,
-        repo,
-      });
-
-    if (
-      environmentsResponse &&
-      Array.isArray(environmentsResponse.environments)
-    ) {
-      // Create a map of environment names to IDs
-      environmentsResponse.environments.forEach((env) => {
-        environmentIds[env.name] = env.id;
-      });
-
-      console.log(
-        "Found environments:",
-        Object.keys(environmentIds).join(", ")
-      );
-    } else {
-      core.warning("No environments found or unexpected response structure.");
-    }
-  } catch (error) {
-    core.warning(
-      `Could not fetch environments: ${error.message}. IDs will be empty.`
-    );
-  }
-
   // --- Analyze Checkbox Toggles ---
-
-  // Helper to check if a specific checkbox was toggled from unchecked to checked
-  function wasToggledOn(checkboxName, workflowType) {
-    const uncheckedRegex = createWorkflowRegex(checkboxName, false);
-    const checkedRegex = createWorkflowRegex(checkboxName, true);
-
-    const previouslyUnchecked = uncheckedRegex.test(previousBody);
-    const nowChecked = checkedRegex.test(commentBody);
-
-    if (previouslyUnchecked && nowChecked) {
-      console.log(
-        `Detected toggle ON for: ${workflowType} - '${checkboxName}'`
-      );
-      return true;
-    }
-    return false;
-  }
 
   async function processWorkflowApprovals(workflows) {
     console.log("Processing workflow approvals...");
+
+    // Only fetch environment IDs if there are workflows that need approval
+    let environmentIds = {};
+    // reduce API calls by fetching environment IDs only once if there are multiple workflows that need approval at the same time
+    let environmentIdsFetched = false;
+
     for (const workflow of workflows) {
-      if (wasToggledOn(workflow, "GA Workflow Approval")) {
+      if (
+        wasToggledOn(
+          workflow,
+          "GA Workflow Approval",
+          commentBody,
+          previousBody
+        )
+      ) {
+        // First check if this workflow needs environment approval
+        const envName = workflowDispatchConfig[workflow];
+
+        if (!envName) {
+          console.log(
+            `No environment mapping found for '${workflow}' - triggering workflow dispatch immediately as it doesn't require environment approval.`
+          );
+
+          // Trigger workflow dispatch immediately for workflows without environment approval
+          try {
+            await github.rest.actions.createWorkflowDispatch({
+              owner,
+              repo,
+              workflow_id: `${workflow}.yml`,
+              ref: branchName,
+            });
+            console.log(
+              `Successfully triggered workflow dispatch for '${workflow}' without environment approval.`
+            );
+          } catch (error) {
+            core.setFailed(
+              `Failed to trigger workflow dispatch for '${workflow}': ${error.message}`
+            );
+          }
+          continue; // Skip to next workflow
+        }
+
+        // Fetch environment IDs only when we have workflows that need approval
+        if (!environmentIdsFetched) {
+          environmentIds = await fetchEnvironmentIds(github, owner, repo, core);
+          environmentIdsFetched = true;
+        }
+
         const targetEnvId = getEnvIdForWorkflow({
           workflow,
-          environmentMappings,
+          workflowDispatchConfig,
           environmentIds,
         });
-        console.log("targetEnvId", targetEnvId);
 
-        // Only process approvals if environment mapping exists
         if (!targetEnvId) {
-          console.log(
-            `Skipping approval for '${workflow}' - no environment mapping found. This workflow may not require environment approval.`
-          );
+          const errorMsg = `Configuration error: Environment '${envName}' is mapped for workflow '${workflow}' but does not exist in the repository. Please check your workflow dispatch configuration and repository environment settings.`;
+          console.error(errorMsg);
+          core.setFailed(errorMsg);
+          throw new Error(errorMsg);
         }
 
         try {
@@ -247,70 +239,115 @@ module.exports = async ({ github, context, core, eventPayload }) => {
                   repo,
                   run_id: matchingRunInBatch.id,
                 });
-              console.log("pendingDeployments", pendingDeployments);
               const needsApprovalForEnv = pendingDeployments.some(
                 (dep) => dep.environment?.id === targetEnvId
               );
-              console.log("needsApprovalForEnv", needsApprovalForEnv);
               if (needsApprovalForEnv) {
                 targetRun = matchingRunInBatch;
                 console.log(
                   `Found target run ID: ${targetRun.id} waiting for environment ${targetEnvId}.`
                 );
-                break; // Stop searching pages
+                break;
               } else {
                 console.log(
                   `Run ID ${matchingRunInBatch.id} found, but not waiting for environment ${targetEnvId}. Checking next runs/pages.`
                 );
               }
             }
-          } // End run iteration
-
-          // trigger if no environment protection
-          console.log(
-            "environmentIds type",
-            typeof Object.values(environmentIds)[0],
-            environmentIds,
-            targetEnvId
-          );
-          if (
-            !targetRun &&
-            !Object.values(environmentIds).includes(targetEnvId)
-          ) {
-            await github.rest.actions.createWorkflowDispatch({
-              owner,
-              repo,
-              workflow_id: `${workflow}.yml`,
-              ref: branchName,
-            });
           }
 
-          // 2. Approve if found
+          // 2. Approve if found with retry logic in finding the waiting workflow run
           if (targetRun) {
-            console.log(
-              `Attempting to approve deployment for run ID ${targetRun.id} / environment ID ${targetEnvId}.`
-            );
-            await github.rest.actions.reviewPendingDeploymentsForRun({
-              owner,
-              repo,
-              run_id: targetRun.id,
-              environment_ids: [targetEnvId], // The specific environment we want to approve
-              state: "approved",
-              comment: `Approved via checkbox toggle in PR #${prNumber}.`,
-            });
-            console.log(
-              `Successfully approved deployment for run ID ${targetRun.id} and environment ID ${targetEnvId}`
-            );
-          } else {
-            // This is common if the run finished, was rejected, or the comment edit happened before the run reached 'waiting' state
-            console.warn(
-              `No 'waiting' workflow run found for '${workflow}' with SHA ${commitHash} that requires approval for environment ID ${targetEnvId}. Cannot approve.`
-            );
+            const approveDeployment = async () => {
+              try {
+                await github.rest.actions.reviewPendingDeploymentsForRun({
+                  owner,
+                  repo,
+                  run_id: targetRun.id,
+                  environment_ids: [targetEnvId],
+                  state: "approved",
+                  comment: `Approved via checkbox toggle in PR #${prNumber}.`,
+                });
+                console.log(
+                  `Successfully approved deployment for run ID ${targetRun.id} and environment ID ${targetEnvId}`
+                );
+              } catch (error) {
+                core.setFailed(
+                  `Failed to approve deployment for run ID ${targetRun.id}: ${error.message}`
+                );
+                throw error;
+              }
+            };
+
+            if (targetRun.status === "waiting") {
+              await approveDeployment();
+            } else {
+              const TIMEOUT = 15000;
+              const RETRY_DELAY = 3000;
+              console.log(
+                `Attempting to approve deployment for run ID ${targetRun.id} / environment ID ${targetEnvId}`
+              );
+
+              const isWorkflowRunReady = await waitForWorkflowRunToBeReady({
+                core,
+                github,
+                owner,
+                repo,
+                runId: targetRun.id,
+                timeout: TIMEOUT,
+                retryDelay: RETRY_DELAY,
+              });
+
+              if (!isWorkflowRunReady) {
+                return;
+              }
+
+              try {
+                const { data: pendingDeployments } =
+                  await github.rest.actions.getPendingDeploymentsForRun({
+                    owner,
+                    repo,
+                    run_id: targetRun.id,
+                  });
+
+                if (pendingDeployments.length === 0) {
+                  console.log(
+                    `No pending deployments found for run ID ${targetRun.id}. It might have been approved or cancelled.`
+                  );
+                  return;
+                }
+
+                console.log(
+                  `Pending deployments for run ID ${
+                    targetRun.id
+                  }: ${JSON.stringify(pendingDeployments)}`
+                );
+
+                const envToApprove = pendingDeployments.find(
+                  (deployment) => deployment.environment.id === targetEnvId
+                );
+
+                if (!envToApprove) {
+                  core.setFailed(
+                    `Environment ID ${targetEnvId} not found in pending deployments for run ${targetRun.id}.`
+                  );
+                  return;
+                }
+
+                await approveDeployment();
+              } catch (error) {
+                core.setFailed(
+                  `Failed to review pending deployments for run ID ${targetRun.id}: ${error.message}`
+                );
+                throw error;
+              }
+            }
           }
         } catch (error) {
           core.setFailed(
             `Failed to process approval for workflow '${workflow}': ${error.message}`
           );
+          throw error;
         }
       }
     }
