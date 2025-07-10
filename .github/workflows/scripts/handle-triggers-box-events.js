@@ -9,7 +9,7 @@ module.exports = async ({ github, context, core, eventPayload }) => {
   const {
     repo: { owner, repo },
   } = context;
-  const actionBot = process.env.ACTION_BOT || "devops-eh";
+  const actionBot = process.env.ACTION_BOT || "hani-nguyen-eh";
 
   const parseWorkflowDispatchConfig = () => {
     try {
