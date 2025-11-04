@@ -11,3 +11,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "Hello, world! Build Dev"
+      - run: echo "Hello, world! Build Dev again" >> $GITHUB_OUTPUT
