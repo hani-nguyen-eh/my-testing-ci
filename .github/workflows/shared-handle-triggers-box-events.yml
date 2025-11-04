@@ -6,7 +6,7 @@ on:
       event-payload:
         required: true
         type: string
-      environment-mappings:
+      workflow-dispatch-config-json:
         required: true
         type: string
         description: 'JSON string mapping workflow names to environment names, e.g. {"build-dev": "Development", "build-preview": "Preview"}'
@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ACTION_BOT: "hani-nguyen-eh"
-      ENVIRONMENT_MAPPINGS: ${{ inputs.environment-mappings }}
+      WORKFLOW_DISPATCH_CONFIG_JSON: ${{ inputs.workflow-dispatch-config-json }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
