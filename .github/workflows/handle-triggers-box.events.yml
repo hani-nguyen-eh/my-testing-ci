@@ -8,7 +8,7 @@ jobs:
   call-handle-events-workflow:
     name: Call handle events workflow
     uses: ./.github/workflows/shared-handle-triggers-box-events.yml
-    if: github.event.issue.pull_request != null && github.event.comment.user.login == 'github-actions[bot]'
+    if: github.event.issue.pull_request != null && github.event.comment.user.login == 'hani-nguyen-eh'
     with:
       event-payload: ${{ toJSON(github.event) }}
       workflow-dispatch-config-json: '{"build-dev": "Development", "build-preview": "Preview", "build-e2e-assets--hr-web-app": null}'
