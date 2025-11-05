@@ -1,0 +1,25 @@
+name: Log env
+
+description: Log environment variables and GitHub event
+
+inputs:
+  tokens_for_logging:
+    description: 'Tokens for logging'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Log env
+      shell: bash
+      env:
+        TOKENS_VALUE: ${{ inputs.tokens_for_logging }}
+      run: |
+        echo "Environment variables:"
+        env
+        echo "--------------------------------"
+        echo "GitHub event:"
+        echo "$TOKENS_VALUE"
+        echo "--------------------------------"
+        echo "Length of TOKENS_FOR_LOGGING: ${#TOKENS_VALUE}"
+        

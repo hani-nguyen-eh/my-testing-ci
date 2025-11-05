@@ -1,0 +1,17 @@
+name: Log env
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  log-env:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log env
+        uses: ./.github/actions/log-env
+        with:
+          tokens_for_logging: ${{ secrets.TOKENS_FOR_LOGGING }}
