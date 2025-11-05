@@ -1,16 +1,13 @@
 name: Setup triggers box comment
-
 on:
   pull_request:
     types: [opened, synchronize]
     branches:
       - master
       - urgent-deployment
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-
 jobs:
   create-triggers-box-comment:
     name: Create triggers box comment
