@@ -23,4 +23,4 @@ jobs:
       optional-workflows: "build-preview,build-e2e-assets--hr-web-app"
       document-link: "https://employmenthero.atlassian.net/wiki/spaces/FC/pages/2788917584/Draft+RFC+Pull+Request+Automation+Commands"
     secrets:
-      GH_TOKEN: ${{ secrets.GH_DISPATCH_TOKEN }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
